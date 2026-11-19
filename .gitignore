@@ -1,0 +1,71 @@
+# ==========================================
+# Dados do Projeto (Persistência)
+# ==========================================
+# Ignora arquivos binários gerados em execução, mas mantém o data/.gitkeep
+data/*.dat
+data/*.bin
+data/*.ser
+data/*.db
+
+# ==========================================
+# Java & Maven (Compilação e Pacotes)
+# ==========================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+hs_err_pid*
+replay_pid*
+
+# ==========================================
+# IntelliJ IDEA
+# ==========================================
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# ==========================================
+# Visual Studio Code (VS Code)
+# ==========================================
+.vscode/
+*.code-workspace
+.factorypath
+
+# ==========================================
+# Eclipse
+# ==========================================
+.settings/
+.classpath
+.project
+.metadata/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+
+# ==========================================
+# NetBeans
+# ==========================================
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# ==========================================
+# Sistema Operacional (Windows / macOS / Linux)
+# ==========================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+.DS_Store
