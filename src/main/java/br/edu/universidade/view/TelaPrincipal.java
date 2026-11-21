@@ -58,8 +58,8 @@ public class TelaPrincipal extends JFrame {
         setMinimumSize(new Dimension(1000, 650));
 
         abas.setFont(Estilo.FONTE_NEGRITO);
-        abas.addTab("Alunos", new AlunoPanel());
-        abas.addTab("Professores", new ProfessorPanel());
+        abas.addTab("Alunos", new AlunoPanel(universidade));
+        abas.addTab("Professores", new ProfessorPanel(universidade));
         // TODO P8 (#20/#21): passar a mesma instância -> new CursoPanel(universidade), etc.
         abas.addTab("Cursos", new CursoPanel());
         abas.addTab("Disciplinas", new DisciplinaPanel());
@@ -217,7 +217,7 @@ public class TelaPrincipal extends JFrame {
 
         lblStatus.setFont(Estilo.FONTE_PADRAO);
         lblStatus.setForeground(Estilo.COR_SECUNDARIA);
-        lblStatus.setText("Dados carregados de data/universidade.dat");
+        lblStatus.setText("Dica: Ctrl+S salva os dados a qualquer momento.");
 
         JPanel barra = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
         barra.setBackground(Estilo.COR_FUNDO);

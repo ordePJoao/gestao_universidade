@@ -1,5 +1,9 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.exception.UniversidadeException;
+import br.edu.universidade.model.Professor;
+import br.edu.universidade.model.Universidade;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -10,22 +14,21 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Tela de Professor: cadastrar, listar, editar e excluir professores.
- * Sprint 1 (task #15, P7): usa dados falsos. Ligação com o núcleo na task #19.
+ * Tela de Professor: cadastrar, listar, editar e excluir professores (tasks #15 e #19, P7).
+ * Os dados vêm da instância única de {@link Universidade} recebida da TelaPrincipal.
  */
-public class ProfessorPanel extends JPanel {
+public class ProfessorPanel extends JPanel implements Atualizavel {
 
-    static final String[] TITULACOES = {"Graduado", "Especialista", "Mestre", "Doutor", "Pós-Doutor"};
+    private static final String[] TITULACOES = {"Graduado", "Especialista", "Mestre", "Doutor", "Pós-Doutor"};
 
-    // Colunas: SIAPE, Nome, CPF, E-mail, Titulação
-    private static final Object[][] PROFESSORES_FALSOS = {
-            {"1234567", DadosFalsos.PROFESSORES[0], "999.888.777-66", "ana.souza@ufu.br", "Doutor"},
-            {"2345678", DadosFalsos.PROFESSORES[1], "888.777.666-55", "carlos.lima@ufu.br", "Mestre"},
-            {"3456789", DadosFalsos.PROFESSORES[2], "777.666.555-44", "marina.rocha@ufu.br", "Doutor"},
-            {"4567890", DadosFalsos.PROFESSORES[3], "666.555.444-33", "paulo.mendes@ufu.br", "Especialista"}
-    };
+    private final Universidade universidade;
+
+    /** Professores na mesma ordem das linhas da tabela. */
+    private final List<Professor> professoresNaTabela = new ArrayList<>();
 
     // Formulário
     private final JTextField txtSiape = new JTextField(10);
@@ -41,10 +44,12 @@ public class ProfessorPanel extends JPanel {
 
     // Tabela
     private final DefaultTableModel modeloProfessores =
-            Estilo.modeloTabela("SIAPE", "Nome", "CPF", "E-mail", "Titulação");
+            Estilo.modeloTabela("SIAPE", "Nome", "CPF", "E-mail", "Titulação", "Turmas");
     private final JTable tblProfessores = Estilo.tabela(modeloProfessores);
 
-    public ProfessorPanel() {
+    public ProfessorPanel(Universidade universidade) {
+        this.universidade = universidade;
+
         setLayout(new BorderLayout());
         JPanel tela = Estilo.painelTela();
         add(tela, BorderLayout.CENTER);
@@ -72,78 +77,172 @@ public class ProfessorPanel extends JPanel {
         centro.add(scrollTabela, BorderLayout.CENTER);
         tela.add(centro, BorderLayout.CENTER);
 
-        carregarDadosFalsos();
         configurarAcoes();
+        limparFormulario();
+        atualizar();
     }
 
-    private void carregarDadosFalsos() {
-        for (Object[] professor : PROFESSORES_FALSOS) {
-            modeloProfessores.addRow(professor);
+    /** Recarrega a tabela a partir da Universidade. */
+    @Override
+    public void atualizar() {
+        modeloProfessores.setRowCount(0);
+        professoresNaTabela.clear();
+        for (Professor professor : universidade.getProfessores()) {
+            professoresNaTabela.add(professor);
+            modeloProfessores.addRow(new Object[]{
+                    professor.getSiape(),
+                    professor.getNome(),
+                    professor.getCpf(),
+                    professor.getEmail(),
+                    professor.getTitulacao(),
+                    professor.getTurmas().size()});
         }
     }
 
     private void configurarAcoes() {
-        // TODO task #19: chamar Universidade em vez de mexer só na tabela
-        btnSalvar.addActionListener(e -> {
-            if (txtSiape.getText().isBlank() || txtNome.getText().isBlank()
-                    || txtCpf.getText().isBlank() || txtEmail.getText().isBlank()) {
-                JOptionPane.showMessageDialog(this, "Preencha todos os campos.",
-                        "Campos obrigatórios", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            Object[] linhaNova = {txtSiape.getText().trim(), txtNome.getText().trim(),
-                    txtCpf.getText().trim(), txtEmail.getText().trim(), cbTitulacao.getSelectedItem()};
-
-            int linha = tblProfessores.getSelectedRow();
-            if (linha >= 0) { // editando um professor existente
-                for (int col = 0; col < linhaNova.length; col++) {
-                    modeloProfessores.setValueAt(linhaNova[col], linha, col);
-                }
-            } else {          // cadastrando um novo
-                modeloProfessores.addRow(linhaNova);
-            }
-            limparFormulario();
-        });
-
+        btnSalvar.addActionListener(e -> salvar());
         btnLimpar.addActionListener(e -> limparFormulario());
-
-        btnExcluir.addActionListener(e -> {
-            int linha = tblProfessores.getSelectedRow();
-            if (linha < 0) {
-                JOptionPane.showMessageDialog(this, "Selecione um professor na tabela.");
-                return;
-            }
-            int resposta = JOptionPane.showConfirmDialog(this,
-                    "Excluir o professor " + modeloProfessores.getValueAt(linha, 1) + "?",
-                    "Confirmar exclusão", JOptionPane.YES_NO_OPTION);
-            if (resposta == JOptionPane.YES_OPTION) {
-                modeloProfessores.removeRow(linha);
-                limparFormulario();
-            }
-        });
+        btnExcluir.addActionListener(e -> excluir());
 
         // Selecionar na tabela -> carrega no formulário para editar
         tblProfessores.getSelectionModel().addListSelectionListener(e -> {
-            int linha = tblProfessores.getSelectedRow();
-            if (e.getValueIsAdjusting() || linha < 0) {
-                return;
+            if (!e.getValueIsAdjusting()) {
+                preencherFormulario(professorSelecionado());
             }
-            txtSiape.setText(String.valueOf(modeloProfessores.getValueAt(linha, 0)));
-            txtSiape.setEditable(false);
-            txtNome.setText(String.valueOf(modeloProfessores.getValueAt(linha, 1)));
-            txtCpf.setText(String.valueOf(modeloProfessores.getValueAt(linha, 2)));
-            txtEmail.setText(String.valueOf(modeloProfessores.getValueAt(linha, 3)));
-            cbTitulacao.setSelectedItem(modeloProfessores.getValueAt(linha, 4));
         });
     }
 
+    // ---------- Ações ----------
+
+    private void salvar() {
+        String siape = txtSiape.getText().trim();
+        String nome = txtNome.getText().trim();
+        String cpf = txtCpf.getText().trim();
+        String email = txtEmail.getText().trim();
+        String titulacao = (String) cbTitulacao.getSelectedItem();
+
+        if (siape.isEmpty() || nome.isEmpty() || cpf.isEmpty() || email.isEmpty()) {
+            aviso("Preencha todos os campos.", "Campos obrigatórios");
+            return;
+        }
+        if (!email.contains("@")) {
+            aviso("Informe um e-mail válido.", "E-mail inválido");
+            return;
+        }
+
+        Professor editando = professorSelecionado();
+        if (cpfEmUso(cpf, editando)) {
+            aviso("Já existe um professor com o CPF " + cpf + ".", "CPF duplicado");
+            return;
+        }
+
+        try {
+            if (editando != null) { // edição: o SIAPE (identificador) não muda
+                editando.setNome(nome);
+                editando.setCpf(cpf);
+                editando.setEmail(email);
+                editando.setTitulacao(titulacao);
+            } else {
+                if (buscarPorSiape(siape) != null) {
+                    aviso("Já existe um professor com o SIAPE " + siape + ".", "SIAPE duplicado");
+                    return;
+                }
+                universidade.cadastrarProfessor(new Professor(nome, cpf, email, siape, titulacao));
+            }
+        } catch (Exception ex) {
+            mostrarErro(ex);
+            return;
+        }
+        atualizar();
+        limparFormulario();
+    }
+
+    private void excluir() {
+        Professor professor = professorSelecionado();
+        if (professor == null) {
+            aviso("Selecione um professor na tabela.", "Excluir professor");
+            return;
+        }
+        if (!professor.getTurmas().isEmpty()) {
+            aviso("O professor " + professor.getNome() + " ministra " + professor.getTurmas().size()
+                    + " turma(s).\nTroque o professor dessas turmas antes de excluir.",
+                    "Não é possível excluir");
+            return;
+        }
+        int resposta = JOptionPane.showConfirmDialog(this,
+                "Excluir o professor " + professor.getNome() + " (SIAPE " + professor.getSiape() + ")?",
+                "Confirmar exclusão", JOptionPane.YES_NO_OPTION);
+        if (resposta != JOptionPane.YES_OPTION) {
+            return;
+        }
+        try {
+            universidade.removerProfessor(professor);
+        } catch (Exception ex) {
+            mostrarErro(ex);
+            return;
+        }
+        atualizar();
+        limparFormulario();
+    }
+
+    // ---------- Auxiliares ----------
+
+    private Professor professorSelecionado() {
+        int linha = tblProfessores.getSelectedRow();
+        return linha >= 0 ? professoresNaTabela.get(tblProfessores.convertRowIndexToModel(linha)) : null;
+    }
+
+    private Professor buscarPorSiape(String siape) {
+        for (Professor p : universidade.getProfessores()) {
+            if (p.getSiape().equalsIgnoreCase(siape)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    /** CPF já usado por outro professor (ignora o próprio professor em edição e a pontuação). */
+    private boolean cpfEmUso(String cpf, Professor ignorar) {
+        String digitos = cpf.replaceAll("\\D", "");
+        for (Professor p : universidade.getProfessores()) {
+            if (p != ignorar && p.getCpf() != null && p.getCpf().replaceAll("\\D", "").equals(digitos)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void preencherFormulario(Professor professor) {
+        if (professor == null) {
+            return;
+        }
+        txtSiape.setText(professor.getSiape());
+        txtSiape.setEditable(false);
+        txtNome.setText(professor.getNome());
+        txtCpf.setText(professor.getCpf());
+        txtEmail.setText(professor.getEmail());
+        cbTitulacao.setSelectedItem(professor.getTitulacao());
+    }
+
     private void limparFormulario() {
+        tblProfessores.clearSelection();
         txtSiape.setText("");
         txtSiape.setEditable(true);
         txtNome.setText("");
         txtCpf.setText("");
         txtEmail.setText("");
         cbTitulacao.setSelectedIndex(0);
-        tblProfessores.clearSelection();
+        txtSiape.requestFocusInWindow();
+    }
+
+    private void aviso(String mensagem, String titulo) {
+        JOptionPane.showMessageDialog(this, mensagem, titulo, JOptionPane.WARNING_MESSAGE);
+    }
+
+    /** Exceções do domínio (CPF inválido etc.) e de validação viram mensagem na tela. */
+    private void mostrarErro(Exception ex) {
+        String titulo = ex instanceof UniversidadeException || ex instanceof IllegalArgumentException
+                ? "Dados inválidos" : "Erro";
+        JOptionPane.showMessageDialog(this, ex.getMessage(), titulo, JOptionPane.ERROR_MESSAGE);
     }
 }
