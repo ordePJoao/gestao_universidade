@@ -1,45 +1,57 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.model.Aluno;
+import br.edu.universidade.model.Matricula;
+import br.edu.universidade.model.Turma;
+import br.edu.universidade.model.Universidade;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Tela de Matrícula: matricular aluno em turma e cancelar matrícula.
- * Sprint 1: usa dados falsos (DadosFalsos). Na Sprint 2 as regras
- * (MatriculaDuplicadaException, TurmaCheiaException) vêm do núcleo.
+ * Tela de Matrícula: matricular aluno em turma e cancelar matrícula (tasks #16 e #21, P8).
+ * As regras (turma cheia, matrícula duplicada) ficam no núcleo: a tela só mostra a mensagem.
  */
-public class MatriculaPanel extends JPanel {
+public class MatriculaPanel extends JPanel implements Atualizavel {
 
-    private static final DateTimeFormatter FORMATO_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private final Universidade universidade;
+
+    /** Matrículas na mesma ordem das linhas da tabela. */
+    private final List<Matricula> matriculasNaTabela = new ArrayList<>();
 
     // Formulário
-    private final JComboBox<String> cbAluno = new JComboBox<>(DadosFalsos.ALUNOS);
-    private final JComboBox<String> cbTurma = new JComboBox<>(DadosFalsos.codigosTurmas());
+    private final JComboBox<Aluno> cbAluno = new JComboBox<>();
+    private final JComboBox<Turma> cbTurma = new JComboBox<>();
 
     // Botões
     private final JButton btnMatricular = Estilo.botaoPrimario("Matricular");
     private final JButton btnCancelarMatricula = Estilo.botaoPerigo("Cancelar matrícula");
 
     // Tabela
-    private final DefaultTableModel modeloMatriculas =
-            Estilo.modeloTabela("Aluno", "Turma", "Data", "Status");
+    private final DefaultTableModel modeloMatriculas = Estilo.modeloTabela(
+            "Matrícula do aluno", "Aluno", "Turma", "Disciplina", "Data", "Status");
     private final JTable tblMatriculas = Estilo.tabela(modeloMatriculas);
 
-    public MatriculaPanel() {
+    public MatriculaPanel(Universidade universidade) {
+        this.universidade = universidade;
+
         setLayout(new BorderLayout());
         JPanel tela = Estilo.painelTela();
         add(tela, BorderLayout.CENTER);
 
         tela.add(Estilo.titulo("Matrículas"), BorderLayout.NORTH);
+
+        Componentes.textoDoCombo(cbAluno, a -> a.getMatricula() + " - " + a.getNome());
+        Componentes.textoDoCombo(cbTurma, t -> t.getCodigo() + " - " + t.getDisciplina().getNome()
+                + " (" + t.getSemestre() + ") - " + t.getVagasDisponiveis() + " vaga(s)");
 
         JPanel formulario = Estilo.formulario("Matricular aluno em turma");
         Estilo.adicionarCampo(formulario, 0, "Aluno", cbAluno);
@@ -59,49 +71,99 @@ public class MatriculaPanel extends JPanel {
         centro.add(scrollTabela, BorderLayout.CENTER);
         tela.add(centro, BorderLayout.CENTER);
 
-        carregarDadosFalsos();
-        configurarAcoes();
+        btnMatricular.addActionListener(e -> matricular());
+        btnCancelarMatricula.addActionListener(e -> cancelar());
+
+        atualizar();
     }
 
-    private void carregarDadosFalsos() {
-        for (Object[] matricula : DadosFalsos.MATRICULAS) {
-            modeloMatriculas.addRow(matricula);
-        }
-    }
+    /** Recarrega combos e tabela. As matrículas são lidas de cada turma da Universidade. */
+    @Override
+    public void atualizar() {
+        Componentes.recarregarCombo(cbAluno, universidade.getAlunos());
+        Componentes.recarregarCombo(cbTurma, universidade.getTurmas());
 
-    private void configurarAcoes() {
-        // TODO Sprint 2: trocar pela chamada ao service, tratando
-        // MatriculaDuplicadaException e TurmaCheiaException
-        btnMatricular.addActionListener(e -> {
-            String aluno = (String) cbAluno.getSelectedItem();
-            String turma = (String) cbTurma.getSelectedItem();
-
-            // Simulação visual da regra "não matricular duas vezes"
-            for (int i = 0; i < modeloMatriculas.getRowCount(); i++) {
-                boolean mesmoAluno = aluno.equals(modeloMatriculas.getValueAt(i, 0));
-                boolean mesmaTurma = turma.equals(modeloMatriculas.getValueAt(i, 1));
-                boolean ativa = "ATIVA".equals(modeloMatriculas.getValueAt(i, 3));
-                if (mesmoAluno && mesmaTurma && ativa) {
-                    JOptionPane.showMessageDialog(this,
-                            "Aluno já matriculado nesta turma.", "Erro", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+        modeloMatriculas.setRowCount(0);
+        matriculasNaTabela.clear();
+        for (Turma turma : universidade.getTurmas()) {
+            for (Matricula m : turma.getMatriculas()) {
+                matriculasNaTabela.add(m);
+                modeloMatriculas.addRow(new Object[]{
+                        m.getAluno().getMatricula(),
+                        m.getAluno().getNome(),
+                        turma.getCodigo(),
+                        turma.getDisciplina().getNome(),
+                        String.valueOf(m.getData()),
+                        String.valueOf(m.getStatus())});
             }
-            modeloMatriculas.addRow(new Object[]{
-                    aluno, turma, LocalDate.now().format(FORMATO_DATA), "ATIVA"});
-        });
+        }
+        cbTurma.repaint(); // atualiza o texto "x vaga(s)" do combo
+    }
 
-        btnCancelarMatricula.addActionListener(e -> {
-            int linha = tblMatriculas.getSelectedRow();
-            if (linha < 0) {
-                JOptionPane.showMessageDialog(this, "Selecione uma matrícula na tabela.");
+    // ---------- Ações ----------
+
+    private void matricular() {
+        Aluno aluno = (Aluno) cbAluno.getSelectedItem();
+        Turma turma = (Turma) cbTurma.getSelectedItem();
+        if (aluno == null) {
+            Componentes.aviso(this, "Cadastre um aluno na aba Alunos primeiro.", "Sem aluno");
+            return;
+        }
+        if (turma == null) {
+            Componentes.aviso(this, "Abra uma turma na aba Turmas primeiro.", "Sem turma");
+            return;
+        }
+        // Mesmo aluno duas vezes na mesma turma (MatriculaDuplicadaException no núcleo)
+        for (Matricula existente : turma.getMatriculas()) {
+            if (existente.getAluno() == aluno) {
+                Componentes.aviso(this, aluno.getNome() + " já está matriculado(a) na turma "
+                        + turma.getCodigo() + ".", "Matrícula duplicada");
                 return;
             }
-            int resposta = JOptionPane.showConfirmDialog(this,
-                    "Cancelar a matrícula selecionada?", "Confirmar", JOptionPane.YES_NO_OPTION);
-            if (resposta == JOptionPane.YES_OPTION) {
-                modeloMatriculas.setValueAt("CANCELADA", linha, 3);
+        }
+        // Turma cheia (TurmaCheiaException no núcleo)
+        if (!turma.temVaga()) {
+            Componentes.aviso(this, "A turma " + turma.getCodigo() + " está cheia ("
+                    + turma.getVagas() + " vagas).", "Turma cheia");
+            return;
+        }
+        try {
+            Matricula matricula = new Matricula(aluno, turma);
+            // ocupa a vaga na turma (se o construtor da Matricula ainda não tiver feito isso)
+            if (!turma.getMatriculas().contains(matricula) && !turma.adicionarMatricula(matricula)) {
+                Componentes.aviso(this, "Não foi possível matricular na turma " + turma.getCodigo() + ".",
+                        "Matrícula não realizada");
+                return;
             }
-        });
+            if (!aluno.getMatriculas().contains(matricula)) {
+                aluno.getMatriculas().add(matricula);   // aparece na lista do aluno
+            }
+        } catch (Exception ex) {
+            Componentes.mostrarErro(this, ex);
+            return;
+        }
+        atualizar();
+    }
+
+    private void cancelar() {
+        int linha = tblMatriculas.getSelectedRow();
+        if (linha < 0) {
+            Componentes.aviso(this, "Selecione uma matrícula na tabela.", "Cancelar matrícula");
+            return;
+        }
+        Matricula m = matriculasNaTabela.get(tblMatriculas.convertRowIndexToModel(linha));
+        if (!Componentes.confirmar(this, "Cancelar a matrícula de " + m.getAluno().getNome()
+                + " na turma " + m.getTurma().getCodigo() + "?\nA vaga será liberada.",
+                "Confirmar cancelamento")) {
+            return;
+        }
+        try {
+            m.getTurma().removerMatricula(m);       // libera a vaga
+            m.getAluno().cancelarMatricula(m);      // tira da lista do aluno
+        } catch (Exception ex) {
+            Componentes.mostrarErro(this, ex);
+            return;
+        }
+        atualizar();
     }
 }
