@@ -5,6 +5,7 @@ import br.edu.universidade.model.Professor;
 import br.edu.universidade.model.Universidade;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -221,7 +222,19 @@ public class ProfessorPanel extends JPanel implements Atualizavel {
         txtNome.setText(professor.getNome());
         txtCpf.setText(professor.getCpf());
         txtEmail.setText(professor.getEmail());
-        cbTitulacao.setSelectedItem(professor.getTitulacao());
+        selecionarTitulacao(professor.getTitulacao());
+    }
+
+    /** Seleciona a titulação; se vier uma fora da lista (ex.: dado antigo), ela é incluída no combo. */
+    private void selecionarTitulacao(String titulacao) {
+        if (titulacao == null || titulacao.isBlank()) {
+            cbTitulacao.setSelectedIndex(0);
+            return;
+        }
+        if (((DefaultComboBoxModel<String>) cbTitulacao.getModel()).getIndexOf(titulacao) < 0) {
+            cbTitulacao.addItem(titulacao);
+        }
+        cbTitulacao.setSelectedItem(titulacao);
     }
 
     private void limparFormulario() {

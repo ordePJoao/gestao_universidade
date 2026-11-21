@@ -183,7 +183,7 @@ se deve salvar. Os dados ficam em `data/universidade.dat`.
 
 Teste automatizado da interface (Swing rodando num display virtual, cliques via `doClick()` e
 leitura das mensagens dos `JOptionPane`), usando os stubs locais de `Universidade`,
-`Matricula` e `RepositorioArquivo`. **26 de 26 verificações passaram.**
+`Matricula` e `RepositorioArquivo`. **30 de 30 verificações passaram.**
 
 | ID | Cenário | Resultado esperado | Status |
 | --- | --- | --- | --- |
@@ -202,6 +202,9 @@ leitura das mensagens dos `JOptionPane`), usando os stubs locais de `Universidad
 | P7-13 | Item de menu | Abre a aba certa; menu com 4 grupos | Passou |
 | P7-14 | Trocar de aba após mudar dados no núcleo | Lista recarregada (`Atualizavel`) | Passou |
 | P7-15 | Salvar, fechar e reabrir | Alunos e professores continuam lá | Passou |
+| P7-16 | Editar professor com titulação fora da lista | Titulação original preservada | Passou |
+| P7-17 | Fechar a janela → Cancelar | Janela continua aberta e nada é salvo | Passou |
+| P7-18 | Fechar a janela → Sim | Salva `data/universidade.dat` e encerra | Passou |
 
 Ainda falta testar com as classes oficiais, depois dos merges de #8, #10 e #13.
 
