@@ -1,9 +1,12 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.model.Curso;
+import br.edu.universidade.model.Disciplina;
+import br.edu.universidade.model.Turma;
+import br.edu.universidade.model.Universidade;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -12,18 +15,24 @@ import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Tela de Disciplina: cadastrar, listar, editar e excluir disciplinas.
- * Sprint 1: usa dados falsos (DadosFalsos). Ligação com o núcleo na Sprint 2.
+ * Tela de Disciplina: cadastrar, listar, editar e excluir disciplinas (tasks #16 e #20, P8).
+ * Os dados vêm da instância única de {@link Universidade} recebida da TelaPrincipal.
  */
-public class DisciplinaPanel extends JPanel {
+public class DisciplinaPanel extends JPanel implements Atualizavel {
+
+    private final Universidade universidade;
+
+    /** Disciplinas na mesma ordem das linhas da tabela. */
+    private final List<Disciplina> disciplinasNaTabela = new ArrayList<>();
 
     // Formulário
     private final JTextField txtCodigo = new JTextField(10);
     private final JTextField txtNome = new JTextField(25);
-    private final JSpinner spnCargaHoraria = new JSpinner(new SpinnerNumberModel(60, 0, 500, 15));
-    private final JComboBox<String> cbDepartamento = new JComboBox<>(DadosFalsos.DEPARTAMENTOS);
+    private final JSpinner spnCargaHoraria = new JSpinner(new SpinnerNumberModel(60, 1, 500, 15));
 
     // Botões
     private final JButton btnSalvar = Estilo.botaoPrimario("Salvar");
@@ -32,10 +41,12 @@ public class DisciplinaPanel extends JPanel {
 
     // Tabela
     private final DefaultTableModel modeloDisciplinas =
-            Estilo.modeloTabela("Código", "Nome", "Carga horária (h)", "Departamento");
+            Estilo.modeloTabela("Código", "Nome", "Carga horária (h)", "Cursos", "Turmas");
     private final JTable tblDisciplinas = Estilo.tabela(modeloDisciplinas);
 
-    public DisciplinaPanel() {
+    public DisciplinaPanel(Universidade universidade) {
+        this.universidade = universidade;
+
         setLayout(new BorderLayout());
         JPanel tela = Estilo.painelTela();
         add(tela, BorderLayout.CENTER);
@@ -46,7 +57,6 @@ public class DisciplinaPanel extends JPanel {
         Estilo.adicionarCampo(formulario, 0, "Código", txtCodigo);
         Estilo.adicionarCampo(formulario, 1, "Nome", txtNome);
         Estilo.adicionarCampo(formulario, 2, "Carga horária (h)", spnCargaHoraria);
-        Estilo.adicionarCampo(formulario, 3, "Departamento", cbDepartamento);
 
         JPanel topo = new JPanel(new BorderLayout());
         topo.setBackground(Estilo.COR_FUNDO);
@@ -62,67 +72,158 @@ public class DisciplinaPanel extends JPanel {
         centro.add(scrollTabela, BorderLayout.CENTER);
         tela.add(centro, BorderLayout.CENTER);
 
-        carregarDadosFalsos();
         configurarAcoes();
+        limparFormulario();
+        atualizar();
     }
 
-    private void carregarDadosFalsos() {
-        for (Object[] disciplina : DadosFalsos.DISCIPLINAS) {
-            modeloDisciplinas.addRow(disciplina);
+    /** Recarrega a tabela a partir da Universidade. */
+    @Override
+    public void atualizar() {
+        Disciplina selecionada = disciplinaSelecionada();
+
+        modeloDisciplinas.setRowCount(0);
+        disciplinasNaTabela.clear();
+        for (Disciplina d : universidade.getDisciplinas()) {
+            disciplinasNaTabela.add(d);
+            modeloDisciplinas.addRow(new Object[]{
+                    d.getCodigo(), d.getNome(), d.getCargaHoraria(),
+                    cursosCom(d).size(), turmasDe(d).size()});
+        }
+
+        // mantém a mesma linha selecionada depois de recarregar
+        int linha = disciplinasNaTabela.indexOf(selecionada);
+        if (linha >= 0) {
+            tblDisciplinas.setRowSelectionInterval(linha, linha);
         }
     }
 
     private void configurarAcoes() {
-        // TODO Sprint 2: chamar o service de Disciplina em vez de mexer só na tabela
-        btnSalvar.addActionListener(e -> {
-            if (txtCodigo.getText().isBlank() || txtNome.getText().isBlank()) {
-                JOptionPane.showMessageDialog(this, "Preencha código e nome.");
-                return;
-            }
-            Object[] linhaNova = {txtCodigo.getText(), txtNome.getText(),
-                    spnCargaHoraria.getValue(), cbDepartamento.getSelectedItem()};
-
-            int linha = tblDisciplinas.getSelectedRow();
-            if (linha >= 0) { // editando uma disciplina existente
-                for (int col = 0; col < linhaNova.length; col++) {
-                    modeloDisciplinas.setValueAt(linhaNova[col], linha, col);
-                }
-            } else {          // cadastrando uma nova
-                modeloDisciplinas.addRow(linhaNova);
-            }
-            limparFormulario();
-        });
-
+        btnSalvar.addActionListener(e -> salvar());
         btnLimpar.addActionListener(e -> limparFormulario());
-
-        btnExcluir.addActionListener(e -> {
-            int linha = tblDisciplinas.getSelectedRow();
-            if (linha < 0) {
-                JOptionPane.showMessageDialog(this, "Selecione uma disciplina na tabela.");
-                return;
-            }
-            modeloDisciplinas.removeRow(linha);
-            limparFormulario();
-        });
+        btnExcluir.addActionListener(e -> excluir());
 
         // Selecionar na tabela -> carrega no formulário para editar
         tblDisciplinas.getSelectionModel().addListSelectionListener(e -> {
-            int linha = tblDisciplinas.getSelectedRow();
-            if (e.getValueIsAdjusting() || linha < 0) {
-                return;
+            if (!e.getValueIsAdjusting()) {
+                preencherFormulario(disciplinaSelecionada());
             }
-            txtCodigo.setText(String.valueOf(modeloDisciplinas.getValueAt(linha, 0)));
-            txtNome.setText(String.valueOf(modeloDisciplinas.getValueAt(linha, 1)));
-            spnCargaHoraria.setValue(modeloDisciplinas.getValueAt(linha, 2));
-            cbDepartamento.setSelectedItem(modeloDisciplinas.getValueAt(linha, 3));
         });
     }
 
+    // ---------- Ações ----------
+
+    private void salvar() {
+        String codigo = txtCodigo.getText().trim();
+        String nome = txtNome.getText().trim();
+        int cargaHoraria = (Integer) spnCargaHoraria.getValue();
+
+        if (codigo.isEmpty() || nome.isEmpty()) {
+            Componentes.aviso(this, "Preencha código e nome.", "Campos obrigatórios");
+            return;
+        }
+
+        Disciplina editando = disciplinaSelecionada();
+        try {
+            if (editando != null) { // edição: o código (identificador) não muda
+                editando.setNome(nome);
+                editando.setCargaHoraria(cargaHoraria);
+            } else {
+                if (buscarPorCodigo(codigo) != null) {
+                    Componentes.aviso(this, "Já existe uma disciplina com o código " + codigo + ".",
+                            "Código duplicado");
+                    return;
+                }
+                universidade.adicionarDisciplina(new Disciplina(codigo, nome, cargaHoraria));
+            }
+        } catch (Exception ex) {
+            Componentes.mostrarErro(this, ex);
+            return;
+        }
+        atualizar();
+        limparFormulario();
+    }
+
+    private void excluir() {
+        Disciplina disciplina = disciplinaSelecionada();
+        if (disciplina == null) {
+            Componentes.aviso(this, "Selecione uma disciplina na tabela.", "Excluir disciplina");
+            return;
+        }
+        // Não deixa a disciplina "sumir" de dentro de um curso ou de uma turma
+        int cursos = cursosCom(disciplina).size();
+        int turmas = turmasDe(disciplina).size();
+        if (cursos > 0 || turmas > 0) {
+            Componentes.aviso(this, disciplina + " está em " + cursos + " curso(s) e "
+                    + turmas + " turma(s).\nRemova dos cursos e exclua as turmas antes.",
+                    "Não é possível excluir");
+            return;
+        }
+        if (!Componentes.confirmar(this, "Excluir a disciplina " + disciplina + "?", "Confirmar exclusão")) {
+            return;
+        }
+        try {
+            universidade.removerDisciplina(disciplina);
+        } catch (Exception ex) {
+            Componentes.mostrarErro(this, ex);
+            return;
+        }
+        atualizar();
+        limparFormulario();
+    }
+
+    // ---------- Auxiliares ----------
+
+    private Disciplina disciplinaSelecionada() {
+        int linha = tblDisciplinas.getSelectedRow();
+        return linha >= 0 && linha < disciplinasNaTabela.size()
+                ? disciplinasNaTabela.get(tblDisciplinas.convertRowIndexToModel(linha)) : null;
+    }
+
+    private Disciplina buscarPorCodigo(String codigo) {
+        for (Disciplina d : universidade.getDisciplinas()) {
+            if (d.getCodigo().equalsIgnoreCase(codigo)) {
+                return d;
+            }
+        }
+        return null;
+    }
+
+    private List<Curso> cursosCom(Disciplina disciplina) {
+        List<Curso> cursos = new ArrayList<>();
+        for (Curso c : universidade.getCursos()) {
+            if (c.getDisciplinas().contains(disciplina)) {
+                cursos.add(c);
+            }
+        }
+        return cursos;
+    }
+
+    private List<Turma> turmasDe(Disciplina disciplina) {
+        List<Turma> turmas = new ArrayList<>();
+        for (Turma t : universidade.getTurmas()) {
+            if (disciplina.equals(t.getDisciplina())) {
+                turmas.add(t);
+            }
+        }
+        return turmas;
+    }
+
+    private void preencherFormulario(Disciplina disciplina) {
+        if (disciplina == null) {
+            return;
+        }
+        txtCodigo.setText(disciplina.getCodigo());
+        txtCodigo.setEditable(false);
+        txtNome.setText(disciplina.getNome());
+        spnCargaHoraria.setValue(disciplina.getCargaHoraria());
+    }
+
     private void limparFormulario() {
+        tblDisciplinas.clearSelection();
         txtCodigo.setText("");
+        txtCodigo.setEditable(true);
         txtNome.setText("");
         spnCargaHoraria.setValue(60);
-        cbDepartamento.setSelectedIndex(0);
-        tblDisciplinas.clearSelection();
     }
 }
