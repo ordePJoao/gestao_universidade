@@ -21,6 +21,7 @@ public class Universidade implements Serializable {
     private final List<Curso> cursos;
     private final List<Disciplina> disciplinas;
     private final List<Turma> turmas;
+    private final List<Departamento> departamentos;
 
     public Universidade() {
         this("Universidade Federal");
@@ -33,6 +34,7 @@ public class Universidade implements Serializable {
         this.cursos = new ArrayList<>();
         this.disciplinas = new ArrayList<>();
         this.turmas = new ArrayList<>();
+        this.departamentos = new ArrayList<>();
     }
 
     public String getNome() {
@@ -253,5 +255,27 @@ public class Universidade implements Serializable {
         return turmas.stream()
                 .filter(t -> codigo.equalsIgnoreCase(t.getCodigo()))
                 .findFirst();
+    }
+
+    // ==========================================
+    // DEPARTAMENTOS
+    // ==========================================
+
+    public List<Departamento> getDepartamentos() {
+        return Collections.unmodifiableList(departamentos);
+    }
+
+    public boolean adicionarDepartamento(Departamento departamento) {
+        if (departamento == null || departamentos.contains(departamento)) {
+            return false;
+        }
+        return departamentos.add(departamento);
+    }
+
+    public boolean removerDepartamento(Departamento departamento) {
+        if (departamento == null) {
+            return false;
+        }
+        return departamentos.remove(departamento);
     }
 }
