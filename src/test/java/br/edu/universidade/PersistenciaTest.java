@@ -1,11 +1,7 @@
 package br.edu.universidade;
 
-import br.edu.universidade.model.Aluno;
-import br.edu.universidade.model.Curso;
-import br.edu.universidade.model.Disciplina;
-import br.edu.universidade.model.Professor;
-import br.edu.universidade.model.Turma;
-import br.edu.universidade.model.Universidade;
+import br.edu.universidade.model.*;
+import br.edu.universidade.persistence.PersistenciaArquivo;
 import br.edu.universidade.persistence.RepositorioArquivo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,11 +9,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Suíte de Testes de Persistência em Arquivo")
+@DisplayName("Testes PR #13 (#15) - Persistência em Arquivo (Cobertura Completa)")
 class PersistenciaTest {
 
     private static final String ARQUIVO_TESTE = "data/teste_universidade.dat";
@@ -26,24 +25,29 @@ class PersistenciaTest {
     @BeforeEach
     void setUp() {
         repositorio = new RepositorioArquivo();
-        limparArquivoTeste();
+        limparArquivo(ARQUIVO_TESTE);
     }
 
     @AfterEach
     void tearDown() {
-        limparArquivoTeste();
+        limparArquivo(ARQUIVO_TESTE);
+        limparArquivo("data/subpasta_nova/teste_dir.dat");
+        File subpasta = new File("data/subpasta_nova");
+        if (subpasta.exists()) {
+            subpasta.delete();
+        }
     }
 
-    private void limparArquivoTeste() {
-        File arquivo = new File(ARQUIVO_TESTE);
+    private void limparArquivo(String caminho) {
+        File arquivo = new File(caminho);
         if (arquivo.exists()) {
             arquivo.delete();
         }
     }
 
     @Test
-    @DisplayName("CT-PERSIST-01: Deve salvar e carregar Universidade com dados persistidos em cascata")
-    void deveSalvarECarregarUniversidade() throws Exception {
+    @DisplayName("PR13-CT01: Deve salvar e carregar Universidade completa em cascata (incluindo Matrículas e Avaliações)")
+    void deveSalvarECarregarUniversidadeCompletaEmCascata() throws Exception {
         Universidade uOriginal = new Universidade("UFU - Universidade Federal de Uberlândia");
 
         Aluno aluno = new Aluno("Lethicia Santos", "123.456.789-00", "lethicia@ufu.br", "20261BSI01", new Date());
@@ -51,7 +55,12 @@ class PersistenciaTest {
         Curso curso = new Curso("BSI", "Sistemas de Informação", 3000);
         Disciplina disciplina = new Disciplina("POO", "Programação Orientada a Objetos", 60);
         curso.adicionarDisciplina(disciplina);
+
         Turma turma = new Turma("POO-2026-1", disciplina, "2026/1", prof, 40);
+        Matricula matricula = new Matricula(aluno, turma);
+        matricula.adicionarAvaliacao("P1", 8.5);
+        matricula.adicionarAvaliacao("P2", 9.5);
+        aluno.getMatriculas().add(matricula);
 
         uOriginal.cadastrarAluno(aluno);
         uOriginal.cadastrarProfessor(prof);
@@ -59,63 +68,91 @@ class PersistenciaTest {
         uOriginal.cadastrarDisciplina(disciplina);
         uOriginal.cadastrarTurma(turma);
 
-        // Salva no arquivo de teste
         repositorio.salvar(uOriginal, ARQUIVO_TESTE);
 
         File arquivoGerado = new File(ARQUIVO_TESTE);
-        assertTrue(arquivoGerado.exists(), "O arquivo de persistência deve ter sido criado em disco");
-        assertTrue(arquivoGerado.length() > 0, "O arquivo de persistência não pode estar vazio");
+        assertTrue(arquivoGerado.exists(), "O arquivo de persistência deve ser criado em disco");
+        assertTrue(arquivoGerado.length() > 0, "O arquivo não pode estar vazio");
 
-        // Carrega do arquivo
         Universidade uCarregada = repositorio.carregar(ARQUIVO_TESTE);
 
-        assertNotNull(uCarregada, "A universidade carregada não deve ser nula");
+        assertNotNull(uCarregada);
         assertEquals("UFU - Universidade Federal de Uberlândia", uCarregada.getNome());
-        assertEquals(1, uCarregada.getAlunos().size(), "Deve conter 1 aluno persistido");
-        assertEquals(1, uCarregada.getProfessores().size(), "Deve conter 1 professor persistido");
-        assertEquals(1, uCarregada.getCursos().size(), "Deve conter 1 curso persistido");
-        assertEquals(1, uCarregada.getDisciplinas().size(), "Deve conter 1 disciplina persistida");
-        assertEquals(1, uCarregada.getTurmas().size(), "Deve conter 1 turma persistida");
+        assertEquals(1, uCarregada.getAlunos().size());
+        assertEquals(1, uCarregada.getProfessores().size());
+        assertEquals(1, uCarregada.getCursos().size());
+        assertEquals(1, uCarregada.getDisciplinas().size());
+        assertEquals(1, uCarregada.getTurmas().size());
 
-        // Verifica integridade dos dados recuperados
-        Aluno alunoRecuperado = uCarregada.buscarAlunoPorMatricula("20261BSI01").orElse(null);
-        assertNotNull(alunoRecuperado);
+        Aluno alunoRecuperado = uCarregada.buscarAlunoPorMatricula("20261BSI01").orElseThrow();
         assertEquals("Lethicia Santos", alunoRecuperado.getNome());
-        assertEquals("20261BSI01", alunoRecuperado.getIdent());
+        assertEquals(1, alunoRecuperado.getMatriculas().size());
+        assertEquals(9.0, alunoRecuperado.getMatriculas().get(0).calcularMedia(), 0.0001);
 
-        Professor profRecuperado = uCarregada.buscarProfessorPorSiape("98765").orElse(null);
-        assertNotNull(profRecuperado);
+        Professor profRecuperado = uCarregada.buscarProfessorPorSiape("98765").orElseThrow();
         assertEquals("Dr. Alan Turing", profRecuperado.getNome());
 
-        Curso cursoRecuperado = uCarregada.buscarCursoPorCodigo("BSI").orElse(null);
-        assertNotNull(cursoRecuperado);
-        assertEquals("Sistemas de Informação", cursoRecuperado.getNome());
+        Curso cursoRecuperado = uCarregada.buscarCursoPorCodigo("BSI").orElseThrow();
         assertEquals(1, cursoRecuperado.getDisciplinas().size());
     }
 
     @Test
-    @DisplayName("CT-PERSIST-02: Se o arquivo não existir, deve retornar uma Universidade nova e vazia")
+    @DisplayName("PR13-CT02: Deve retornar Universidade vazia na primeira execução (arquivo inexistente)")
     void deveRetornarUniversidadeVaziaSeArquivoNaoExistir() throws Exception {
         String arquivoInexistente = "data/arquivo_que_nunca_existiu.dat";
-        File f = new File(arquivoInexistente);
-        if (f.exists()) f.delete();
+        limparArquivo(arquivoInexistente);
 
         Universidade u = repositorio.carregar(arquivoInexistente);
 
-        assertNotNull(u, "Deve retornar uma instância não nula");
-        assertTrue(u.getAlunos().isEmpty(), "Lista de alunos deve iniciar vazia");
-        assertTrue(u.getProfessores().isEmpty(), "Lista de professores deve iniciar vazia");
-        assertTrue(u.getCursos().isEmpty(), "Lista de cursos deve iniciar vazia");
-        assertTrue(u.getDisciplinas().isEmpty(), "Lista de disciplinas deve iniciar vazia");
-        assertTrue(u.getTurmas().isEmpty(), "Lista de turmas deve iniciar vazia");
+        assertNotNull(u);
+        assertTrue(u.getAlunos().isEmpty());
+        assertTrue(u.getProfessores().isEmpty());
+        assertTrue(u.getCursos().isEmpty());
+        assertTrue(u.getDisciplinas().isEmpty());
+        assertTrue(u.getTurmas().isEmpty());
     }
 
     @Test
-    @DisplayName("CT-PERSIST-03: Validação de parâmetros nulos e inválidos")
+    @DisplayName("PR13-CT03: Deve criar diretórios pais automaticamente se não existirem")
+    void deveCriarDiretoriosPaisAutomaticamente() throws Exception {
+        String caminhoComSubpasta = "data/subpasta_nova/teste_dir.dat";
+        Universidade u = new Universidade("UFU");
+
+        repositorio.salvar(u, caminhoComSubpasta);
+
+        assertTrue(new File(caminhoComSubpasta).exists());
+    }
+
+    @Test
+    @DisplayName("PR13-CT04: Deve lançar IOException se o arquivo estiver corrompido")
+    void deveLancarExcecaoParaArquivoCorrompido() throws Exception {
+        try (FileOutputStream fos = new FileOutputStream(ARQUIVO_TESTE)) {
+            fos.write("conteudo_invalido_nao_serializado".getBytes(StandardCharsets.UTF_8));
+        }
+
+        assertThrows(IOException.class, () -> repositorio.carregar(ARQUIVO_TESTE));
+    }
+
+    @Test
+    @DisplayName("PR13-CT05: Deve validar parâmetros nulos ou em branco")
     void deveValidarParametrosInvalidos() {
         assertThrows(IllegalArgumentException.class, () -> repositorio.salvar(null, ARQUIVO_TESTE));
         assertThrows(IllegalArgumentException.class, () -> repositorio.salvar(new Universidade(), ""));
+        assertThrows(IllegalArgumentException.class, () -> repositorio.salvar(new Universidade(), null));
         assertThrows(IllegalArgumentException.class, () -> repositorio.carregar(null));
         assertThrows(IllegalArgumentException.class, () -> repositorio.carregar("   "));
+    }
+
+    @Test
+    @DisplayName("PR13-CT06: Alias PersistenciaArquivo deve funcionar de forma idêntica a RepositorioArquivo")
+    void deveFuncionarComAliasPersistenciaArquivo() throws Exception {
+        PersistenciaArquivo alias = new PersistenciaArquivo();
+        assertEquals("data/universidade.dat", RepositorioArquivo.ARQUIVO_PADRAO);
+
+        Universidade u = new Universidade("UFU Alias");
+        alias.salvar(u, ARQUIVO_TESTE);
+        Universidade carregada = alias.carregar(ARQUIVO_TESTE);
+
+        assertEquals("UFU Alias", carregada.getNome());
     }
 }
