@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.time.Year;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Objeto raiz do sistema de Gestão Universitária.
@@ -54,6 +56,12 @@ public class Universidade implements Serializable {
     }
 
     public boolean cadastrarAluno(Aluno aluno) {
+        if (aluno == null) { return false; }
+
+        boolean semCodigo = aluno.getCodigoMatricula() == null || aluno.getCodigoMatricula().isBlank();
+        if (semCodigo && aluno.getCurso() != null) {
+            aluno.setCodigoMatricula(gerarMatricula(aluno.getCurso()));
+        }
         return adicionarAluno(aluno);
     }
 
@@ -85,6 +93,16 @@ public class Universidade implements Serializable {
         return alunos.stream()
                 .filter(a -> matricula.equalsIgnoreCase(a.getMatricula()))
                 .findFirst();
+    }
+
+    public String gerarMatricula(Curso curso) {
+        if (curso == null) { throw new IllegalArgumentException("Curso não pode ser nulo."); }
+        String prefixo = Year.now().getValue() + curso.getCodigo();
+        for (int tentativa = 0; tentativa < 10_000; tentativa++) {
+            String codigo = prefixo + String.format("%04d", ThreadLocalRandom.current().nextInt(10_000));
+            if (buscarAlunoPorMatricula(codigo).isEmpty()) { return codigo; }
+        }
+        throw new IllegalStateException("Não há mais códigos de matrícula livres para o curso " + curso.getCodigo());
     }
 
     // ==========================================
