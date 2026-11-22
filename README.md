@@ -52,7 +52,12 @@ docs/               UML, relatório, screenshots e apresentação
 * **Agregação:** `Universidade`, `Curso` e `Disciplina`
 * **Composição:** `Matricula` e `Avaliacao`
 * **Encapsulamento:** atributos privados com acesso por getters e setters
-* **Exceções customizadas:** pacote `exception`
+* **Exceções customizadas:** pacote `exception` com hierarquia baseada em `UniversidadeException`:
+  * `NotaInvalidaException`: lançada quando uma nota informada não está no intervalo de 0.0 a 10.0.
+  * `MatriculaDuplicadaException`: lançada ao tentar matricular um aluno que já possui vínculo ativo na mesma turma.
+  * `TurmaCheiaException`: lançada quando uma turma não possui vagas disponíveis para nova matrícula.
+  * `AlunoNaoEncontradoException`: lançada quando uma consulta por identificador ou matrícula não localiza o aluno.
+  * `CpfInvalidoException`: lançada quando um CPF informado não atende aos requisitos e dígitos válidos.
 
 ## Persistência de Dados
 
