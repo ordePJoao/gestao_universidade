@@ -1,22 +1,24 @@
 # Registro e Evidências de Testes — Gestão Universitária
 
-Este documento registra os cenários de teste unitários executados via **JUnit 5 + Maven** (`mvn test`) para validar as entidades do domínio antes da integração com a interface Swing.
+Este documento registra o histórico consolidado dos cenários de teste unitários executados via **JUnit 5 + Maven** (`mvn test`) para validar as entidades do domínio, exceções e persistência antes da integração com a interface Swing.
 
-## 1. Testes Automatizados (`src/test/java/br/edu/universidade/DominioTest.java`)
+---
+
+## 1. Suíte Base do Domínio (`src/test/java/br/edu/universidade/DominioTest.java`)
+* **Resultado da Execução:** `Tests run: 2, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
 
 | ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **CT01** | Polimorfismo de Identificação | `Pessoa`, `Aluno`, `Professor` | Instanciar `Aluno` e `Professor` como `Pessoa` e chamar `getIdent()` e `exibirDados()` | Retorna matrícula para `Aluno` e SIAPE para `Professor`, exibindo dados sem exceções | Ativo (Passou) |
 | **CT02** | Validação de Notas | `Avaliacao`, `NotaInvalidaException` | Criar notas válidas (`8.5`, `9.0`) e inválidas (`-1.0`, `10.5`, `11.0`) | Aceita notas entre `0.0` e `10.0` e lança `NotaInvalidaException` fora do intervalo | Ativo (Passou) |
-| **CT03** | Cálculo de Média e Situação | `Matricula`, `Avaliacao`, `Aluno` | Adicionar duas avaliações (`8.0` e `6.0`) e consultar `calcularMedia()` e `getSituacao()` | Média igual a `7.0` e situação retornando `"APROVADO"` | `@Disabled` (Passou com stub local) |
+| **CT03** | Cálculo de Média e Situação *(Legado / Stub)* | `Matricula`, `Avaliacao`, `Aluno` | Adicionar duas avaliações (`8.0` e `6.0`) e consultar `calcularMedia()` e `getSituacao()` | Média igual a `7.0` e situação retornando `"APROVADO"` | Substituído por `MatriculaLeticiaTest` |
 
-## 2. Observação sobre Integração Parcial (CT03)
-
-Para validar o fluxo de matrícula e cálculo de média antes do merge oficial da classe `Matricula`, foi utilizado um *stub* local temporário. O stub foi removido antes do commit para evitar conflitos de merge na branch `develop`, e o caso de teste **CT03** foi mantido registrado com `@Disabled` em `DominioTest.java` para reativação imediata após a entrega da task oficial.
+### Observação sobre Integração Parcial (CT03)
+Para validar o fluxo de matrícula e cálculo de média antes do merge oficial da classe `Matricula`, foi utilizado inicialmente um *stub* local temporário. Após o merge do **PR #51**, o stub foi removido e o cenário foi expandido na suíte dedicada de `Matricula` abaixo.
 
 ---
 
-## 3. Suíte `MatriculaLeticiaTest` — Validação do PR #51 (`src/test/java/br/edu/universidade/MatriculaLeticiaTest.java`)
+## 2. Suíte `MatriculaLeticiaTest` — Validação do PR #51 (`src/test/java/br/edu/universidade/MatriculaLeticiaTest.java`)
 * **Resultado da Execução:** `Tests run: 8, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
 
 | ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
@@ -32,7 +34,7 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 
 ---
 
-## 4. Suíte `PersistenciaTest` — Validação da Issue #13 / #15 (`src/test/java/br/edu/universidade/PersistenciaTest.java`)
+## 3. Suíte `PersistenciaTest` — Validação da Issue #13 / #15 (`src/test/java/br/edu/universidade/PersistenciaTest.java`)
 * **Resultado da Execução:** `Tests run: 6, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
 
 | ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
@@ -43,3 +45,16 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR13-CT04** | Tratamento de arquivo corrompido | `RepositorioArquivo` | Tentar carregar arquivo com texto inválido não serializado | Lança `IOException` controlada sem derrubar a aplicação | Ativo (Passou) |
 | **PR13-CT05** | Validação de argumentos inválidos | `RepositorioArquivo` | Passar `universidade` nula ou `caminho` nulo/vazio para `salvar()` e `carregar()` | Lança `IllegalArgumentException` | Ativo (Passou) |
 | **PR13-CT06** | Compatibilidade com alias | `PersistenciaArquivo`, `RepositorioArquivo` | Instanciar `PersistenciaArquivo`, verificar `ARQUIVO_PADRAO` (`data/universidade.dat`) e salvar/carregar | Funciona de forma idêntica a `RepositorioArquivo` | Ativo (Passou) |
+
+---
+
+## 4. Suíte `ExcecaoTest` — Validação da Issue #12 / #53 (`src/test/java/br/edu/universidade/ExcecaoTest.java`)
+* **Resultado da Execução:** `Tests run: 5, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **CT-EXC-01** | Hierarquia de exceções | `UniversidadeException`, `NotaInvalidaException`, `MatriculaDuplicadaException`, `TurmaCheiaException`, `AlunoNaoEncontradoException`, `CpfInvalidoException` | Verificar via `isAssignableFrom` se todas estendem `UniversidadeException` | Todas as 5 exceções de domínio herdam da classe base `UniversidadeException` | Ativo (Passou) |
+| **CT-EXC-02** | Exceção de matrícula duplicada | `MatriculaDuplicadaException` | Instanciar com matrícula `"20261BSI01"` e turma `"POO-2026-1"` | Armazena os identificadores e inclui ambos na mensagem em português | Ativo (Passou) |
+| **CT-EXC-03** | Exceção de turma cheia | `TurmaCheiaException` | Instanciar com turma `"POO-2026-1"` e `40` vagas | Armazena código da turma, total de vagas e formata mensagem descritiva | Ativo (Passou) |
+| **CT-EXC-04** | Exceção de aluno não encontrado | `AlunoNaoEncontradoException` | Instanciar com matrícula inexistente `"20261BSI99"` | Armazena o identificador buscado e o exibe na mensagem de erro | Ativo (Passou) |
+| **CT-EXC-05** | Exceção de CPF inválido | `CpfInvalidoException` | Instanciar com CPF inválido `"123.456"` | Armazena o CPF informado e explica o formato esperado na mensagem | Ativo (Passou) |
