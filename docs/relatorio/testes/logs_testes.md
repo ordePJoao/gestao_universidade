@@ -79,3 +79,14 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **PR57-CT01** | Gerenciamento e encapsulamento de departamentos | `Universidade`, `Departamento` | Adicionar departamentos distintos, tentar duplicado/nulo, tentar `clear()` na lista retornada e remover departamento | Ignora nulos/duplicados, lança `UnsupportedOperationException` na lista exposta e remove corretamente | Ativo (Passou) |
 | **PR57-CT02** | Persistência em cascata de departamentos | `Universidade`, `Departamento`, `Professor`, `RepositorioArquivo` | Salvar e carregar `Universidade` contendo `Departamento` com `Professor` associado | Restaura departamento e lista de professores vinculada sem perda de dados | Ativo (Passou) |
+---
+
+## 7. Suíte `TestPR58` — Validação da Task #11.1 / Issue #30 (`src/test/java/br/edu/universidade/TestPR58.java`)
+* **Resultado da Execução:** `Tests run: 4, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR58-CT01** | Geração automática de código de matrícula | `Universidade`, `Aluno`, `Curso` | Cadastrar `Aluno` com `Curso` (`BSI`) e sem matrícula prévia | Gera código no formato `ANO + BSI + 4 dígitos` e vincula ao aluno | Ativo (Passou) |
+| **PR58-CT02** | Unicidade de códigos gerados | `Universidade`, `Aluno`, `Curso` | Cadastrar `30` alunos consecutivos no mesmo curso (`BCC`) | Gera 30 códigos distintos sem colisão ou duplicidade | Ativo (Passou) |
+| **PR58-CT03** | Preservação de matrícula pré-definida | `Universidade`, `Aluno` | Cadastrar `Aluno` instanciado com código explícito (`20261BCC99`) | Mantém o código informado originalmente sem sobrescrever | Ativo (Passou) |
+| **PR58-CT04** | Validação de parâmetros nulos | `Universidade`, `Aluno` | Chamar `gerarMatricula(null)` e `cadastrarAluno(null)` | Lança `IllegalArgumentException` para curso nulo e retorna `false` para aluno nulo | Ativo (Passou) |
