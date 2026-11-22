@@ -90,3 +90,14 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR58-CT02** | Unicidade de códigos gerados | `Universidade`, `Aluno`, `Curso` | Cadastrar `30` alunos consecutivos no mesmo curso (`BCC`) | Gera 30 códigos distintos sem colisão ou duplicidade | Ativo (Passou) |
 | **PR58-CT03** | Preservação de matrícula pré-definida | `Universidade`, `Aluno` | Cadastrar `Aluno` instanciado com código explícito (`20261BCC99`) | Mantém o código informado originalmente sem sobrescrever | Ativo (Passou) |
 | **PR58-CT04** | Validação de parâmetros nulos | `Universidade`, `Aluno` | Chamar `gerarMatricula(null)` e `cadastrarAluno(null)` | Lança `IllegalArgumentException` para curso nulo e retorna `false` para aluno nulo | Ativo (Passou) |
+---
+
+## 8. Suíte `TestPR59` — Validação da Task #11.2 / Issue #31 (`src/test/java/br/edu/universidade/TestPR59.java`)
+* **Resultado da Execução:** `Tests run: 4, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR59-CT01** | Busca por nome normalizado | `Universidade`, `Aluno` | Chamar `buscarAluno("jose")` e `buscarAluno("JO")` | Ignora acentos e maiúsculas/minúsculas, retornando os alunos correspondentes | Ativo (Passou) |
+| **PR59-CT02** | Busca por CPF (com e sem pontuação) | `Universidade`, `Aluno` | Buscar por `"555.666.777-88"`, `"55566677788"` e termo numérico curto `"555"` | Localiza o aluno independente da máscara de CPF e ignora termos menores que 11 dígitos | Ativo (Passou) |
+| **PR59-CT03** | Busca por matrícula e termos inválidos | `Universidade`, `Aluno` | Chamar `buscarAluno("2026bsi0001")`, `"inexistente"`, `""` e `null` | Retorna o aluno correspondente para matrícula válida e lista vazia para termos inválidos | Ativo (Passou) |
+| **PR59-CT04** | Busca exata com exceção | `Universidade`, `Aluno`, `AlunoNaoEncontradoException` | Chamar `buscarPorMatricula("2026BSI0002")` e `buscarPorMatricula("2026BSI9999")` | Retorna o `Aluno` quando existe e lança `AlunoNaoEncontradoException` quando não encontra | Ativo (Passou) |
