@@ -44,23 +44,4 @@ class DominioTest {
         assertThrows(NotaInvalidaException.class, () -> new Avaliacao("P2", 10.5));
         assertThrows(NotaInvalidaException.class, () -> p1.alterarNota(11.0));
     }
-
-    @Test
-    @Disabled("Aguardando merge oficial da classe Matricula na develop (testado localmente com stub)")
-    @DisplayName("CT03 - Deve calcular média e retornar situação APROVADO na Matrícula")
-    void deveTestarMatriculaEMedia() throws Exception {
-        // Descomentar após o merge oficial de Matricula.java:
-        /*
-        Aluno a1 = new Aluno("Ana Silva", "111.222.333-44", "ana@ufu.br", "20261BCC01", new Date());
-        Matricula mat = new Matricula(a1, null);
-
-        assertEquals("CURSANDO", mat.getSituacao());
-
-        mat.adicionarAvaliacao(new Avaliacao("P1", 8.0));
-        mat.adicionarAvaliacao(new Avaliacao("P2", 6.0));
-
-        assertEquals(7.0, mat.calcularMedia());
-        assertEquals("APROVADO", mat.getSituacao());
-        */
-    }
 }

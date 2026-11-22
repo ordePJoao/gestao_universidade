@@ -13,3 +13,21 @@ Este documento registra os cenários de teste unitários executados via **JUnit 
 ## 2. Observação sobre Integração Parcial (CT03)
 
 Para validar o fluxo de matrícula e cálculo de média antes do merge oficial da classe `Matricula`, foi utilizado um *stub* local temporário. O stub foi removido antes do commit para evitar conflitos de merge na branch `develop`, e o caso de teste **CT03** foi mantido registrado com `@Disabled` em `DominioTest.java` para reativação imediata após a entrega da task oficial.
+
+---
+
+## 3. Suíte `MatriculaLeticiaTest` — Validação do PR #51 (`src/test/java/br/edu/universidade/MatriculaLeticiaTest.java`)
+* **Resultado da Execução:** `Tests run: 8, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR51-CT01** | Inicialização padrão | `Matricula`, `StatusMatricula` | Instanciar `Matricula(aluno, turma)` | Status `ATIVA`, data preenchida (`LocalDate`), lista de avaliações vazia e média `0.0` | Ativo (Passou) |
+| **PR51-CT02** | Validação de nulos no construtor | `Matricula` | Instanciar `Matricula(null, turma)` e `Matricula(aluno, null)` | Lança `NullPointerException` impedindo estado inconsistente | Ativo (Passou) |
+| **PR51-CT03** | Limites exatos de nota e média | `Matricula`, `Avaliacao` | Adicionar notas `0.0` e `10.0` via `adicionarAvaliacao(tipo, nota)` | Aceita ambos os extremos e calcula média igual a `5.0` | Ativo (Passou) |
+| **PR51-CT04** | Bloqueio de avaliações inválidas | `Matricula`, `NotaInvalidaException` | Tentar adicionar nota `-0.1`, nota `10.1` e tipo `null` | Lança `NotaInvalidaException` para notas fora de `[0, 10]` e `NullPointerException` para tipo nulo | Ativo (Passou) |
+| **PR51-CT05** | Encapsulamento da composição | `Matricula` | Chamar `getAvaliacoes().clear()` e `getAvaliacoes().remove(0)` | Lança `UnsupportedOperationException` (lista exposta é não modificável) | Ativo (Passou) |
+| **PR51-CT06** | Cancelamento direto | `Matricula`, `StatusMatricula` | Chamar `mat.cancelar()` | Altera `status` e `getSituacao()` para `CANCELADA` | Ativo (Passou) |
+| **PR51-CT07** | Igualdade (`equals` e `hashCode`) | `Matricula`, `Aluno`, `Turma` | Comparar matrículas de mesmo `(aluno, turma)` vs. alunos ou turmas diferentes | Retorna `true` apenas quando `Aluno` e `Turma` são iguais | Ativo (Passou) |
+| **PR51-CT08** | Persistência binária (`Serializable`) | `Matricula`, `Avaliacao` | Gravar `Matricula` com avaliações em `ObjectOutputStream` e restaurar via `ObjectInputStream` | Restaura aluno, data, status e média (`9.0`) sem perda de dados | Ativo (Passou) |
+
+---
