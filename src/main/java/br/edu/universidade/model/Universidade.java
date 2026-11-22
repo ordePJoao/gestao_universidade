@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Optional;
 import java.time.Year;
 import java.util.concurrent.ThreadLocalRandom;
+import br.edu.universidade.exception.AlunoNaoEncontradoException;
+import java.text.Normalizer;
 
 /**
  * Objeto raiz do sistema de Gestão Universitária.
@@ -105,6 +107,36 @@ public class Universidade implements Serializable {
             if (buscarAlunoPorMatricula(codigo).isEmpty()) { return codigo; }
         }
         throw new IllegalStateException("Não há mais códigos de matrícula livres para o curso " + curso.getCodigo());
+    }
+
+    public Aluno buscarPorMatricula(String matricula) throws AlunoNaoEncontradoException {
+        return buscarAlunoPorMatricula(matricula)
+                .orElseThrow(() -> new AlunoNaoEncontradoException(matricula));
+    }
+
+    /** Busca por matrícula, CPF (com ou sem pontuação) ou parte do nome (sem acento e sem diferenciar maiúsculas). */
+    public List<Aluno> buscarAluno(String termo) {
+        List<Aluno> resultado = new ArrayList<>();
+        if (termo == null || termo.isBlank()) { return resultado; }
+        String termoTexto = normalizar(termo);
+        String termoDigitos = termo.replaceAll("\\D", "");
+
+        for (Aluno a : alunos) {
+            boolean porMatricula = a.getMatricula() != null && a.getMatricula().equalsIgnoreCase(termo.trim());
+            boolean porCpf = termoDigitos.length() == 11
+                    && termoDigitos.equals(a.getCpf() == null ? "" : a.getCpf().replaceAll("\\D", ""));
+            boolean porNome = normalizar(a.getNome()).contains(termoTexto);
+
+            if (porMatricula || porCpf || porNome) { resultado.add(a); }
+        } return resultado;
+    }
+
+    private static String normalizar(String texto) {
+        if (texto == null) { return ""; }
+        return Normalizer.normalize(texto, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .trim();
     }
 
     // ==========================================
