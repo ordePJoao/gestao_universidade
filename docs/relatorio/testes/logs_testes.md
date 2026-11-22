@@ -58,3 +58,15 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **CT-EXC-03** | Exceção de turma cheia | `TurmaCheiaException` | Instanciar com turma `"POO-2026-1"` e `40` vagas | Armazena código da turma, total de vagas e formata mensagem descritiva | Ativo (Passou) |
 | **CT-EXC-04** | Exceção de aluno não encontrado | `AlunoNaoEncontradoException` | Instanciar com matrícula inexistente `"20261BSI99"` | Armazena o identificador buscado e o exibe na mensagem de erro | Ativo (Passou) |
 | **CT-EXC-05** | Exceção de CPF inválido | `CpfInvalidoException` | Instanciar com CPF inválido `"123.456"` | Armazena o CPF informado e explica o formato esperado na mensagem | Ativo (Passou) |
+
+---
+
+## 5. Suíte `DepartamentoTest` — Validação da Issue #7 / #56 (`src/test/java/br/edu/universidade/DepartamentoTest.java`)
+* **Resultado da Execução:** `Tests run: 4, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR56-CT01** | Inicialização e getters/setters | `Departamento` | Instanciar `Departamento("FACOM - Faculdade de Computação")` e alterar nome via `setNome()` | Inicializa com lista vazia de professores e atualiza o nome corretamente | Ativo (Passou) |
+| **PR56-CT02** | Bloqueio de professor duplicado | `Departamento`, `Professor` | Chamar `adicionarProfessor(p1)`, `adicionarProfessor(p2)` e repetir `adicionarProfessor(p1)` | Mantém tamanho `2` na lista, ignorando a inserção duplicada | Ativo (Passou) |
+| **PR56-CT03** | Independência da agregação | `Professor`, `Departamento` | Instanciar `Professor` sem associá-lo a nenhum `Departamento` | Instancia normalmente com identificador SIAPE válido | Ativo (Passou) |
+| **PR56-CT04** | Persistência binária (`Serializable`) | `Departamento`, `Professor` | Gravar `Departamento` com professor em `ObjectOutputStream` e restaurar via `ObjectInputStream` | Restaura nome e lista de professores sem perda de dados | Ativo (Passou) |
