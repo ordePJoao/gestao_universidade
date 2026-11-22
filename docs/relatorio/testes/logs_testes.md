@@ -31,3 +31,15 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR51-CT08** | Persistência binária (`Serializable`) | `Matricula`, `Avaliacao` | Gravar `Matricula` com avaliações em `ObjectOutputStream` e restaurar via `ObjectInputStream` | Restaura aluno, data, status e média (`9.0`) sem perda de dados | Ativo (Passou) |
 
 ---
+
+## 4. Suíte `PersistenciaTest` — Validação da Issue #13 / #15 (`src/test/java/br/edu/universidade/PersistenciaTest.java`)
+* **Resultado da Execução:** `Tests run: 6, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR13-CT01** | Persistência completa em cascata | `RepositorioArquivo`, `Universidade`, `Aluno`, `Professor`, `Curso`, `Disciplina`, `Turma`, `Matricula`, `Avaliacao` | Salvar e carregar `Universidade` populada com todas as entidades e notas em arquivo `.dat` | Restaura todas as listas, buscas por matrícula/SIAPE/código e média calculada (`9.0`) | Ativo (Passou) |
+| **PR13-CT02** | Primeira execução (arquivo inexistente) | `RepositorioArquivo`, `Universidade` | Chamar `carregar()` apontando para caminho inexistente | Retorna nova instância de `Universidade` com todas as listas vazias, sem erro | Ativo (Passou) |
+| **PR13-CT03** | Criação automática de diretórios | `RepositorioArquivo` | Salvar arquivo em subdiretório ainda não existente (`data/subpasta_nova/...`) | Cria diretórios pais via `mkdirs()` e grava o arquivo com sucesso | Ativo (Passou) |
+| **PR13-CT04** | Tratamento de arquivo corrompido | `RepositorioArquivo` | Tentar carregar arquivo com texto inválido não serializado | Lança `IOException` controlada sem derrubar a aplicação | Ativo (Passou) |
+| **PR13-CT05** | Validação de argumentos inválidos | `RepositorioArquivo` | Passar `universidade` nula ou `caminho` nulo/vazio para `salvar()` e `carregar()` | Lança `IllegalArgumentException` | Ativo (Passou) |
+| **PR13-CT06** | Compatibilidade com alias | `PersistenciaArquivo`, `RepositorioArquivo` | Instanciar `PersistenciaArquivo`, verificar `ARQUIVO_PADRAO` (`data/universidade.dat`) e salvar/carregar | Funciona de forma idêntica a `RepositorioArquivo` | Ativo (Passou) |
