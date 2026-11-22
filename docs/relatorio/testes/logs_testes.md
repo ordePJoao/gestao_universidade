@@ -70,3 +70,12 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR56-CT02** | Bloqueio de professor duplicado | `Departamento`, `Professor` | Chamar `adicionarProfessor(p1)`, `adicionarProfessor(p2)` e repetir `adicionarProfessor(p1)` | Mantém tamanho `2` na lista, ignorando a inserção duplicada | Ativo (Passou) |
 | **PR56-CT03** | Independência da agregação | `Professor`, `Departamento` | Instanciar `Professor` sem associá-lo a nenhum `Departamento` | Instancia normalmente com identificador SIAPE válido | Ativo (Passou) |
 | **PR56-CT04** | Persistência binária (`Serializable`) | `Departamento`, `Professor` | Gravar `Departamento` com professor em `ObjectOutputStream` e restaurar via `ObjectInputStream` | Restaura nome e lista de professores sem perda de dados | Ativo (Passou) |
+---
+
+## 6. Suíte `UniversidadeDepartamentoTest` — Validação da Issue #8 / #57 (`src/test/java/br/edu/universidade/UniversidadeDepartamentoTest.java`)
+* **Resultado da Execução:** `Tests run: 2, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR57-CT01** | Gerenciamento e encapsulamento de departamentos | `Universidade`, `Departamento` | Adicionar departamentos distintos, tentar duplicado/nulo, tentar `clear()` na lista retornada e remover departamento | Ignora nulos/duplicados, lança `UnsupportedOperationException` na lista exposta e remove corretamente | Ativo (Passou) |
+| **PR57-CT02** | Persistência em cascata de departamentos | `Universidade`, `Departamento`, `Professor`, `RepositorioArquivo` | Salvar e carregar `Universidade` contendo `Departamento` com `Professor` associado | Restaura departamento e lista de professores vinculada sem perda de dados | Ativo (Passou) |
