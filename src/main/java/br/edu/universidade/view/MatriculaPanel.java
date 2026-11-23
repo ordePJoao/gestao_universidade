@@ -158,6 +158,7 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
             return;
         }
         try {
+            m.cancelar();                           // status CANCELADA
             m.getTurma().removerMatricula(m);       // libera a vaga
             m.getAluno().cancelarMatricula(m);      // tira da lista do aluno
         } catch (Exception ex) {

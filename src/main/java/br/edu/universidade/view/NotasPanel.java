@@ -138,8 +138,9 @@ public class NotasPanel extends JPanel implements Atualizavel {
             return;
         }
         try {
-            // Avaliacao valida a nota (0 a 10) e lança NotaInvalidaException se estiver fora
-            matricula.adicionarAvaliacao(new Avaliacao(tipo, nota()));
+            // A Matricula cria a Avaliacao, que valida a nota (0 a 10)
+            // e lança NotaInvalidaException se estiver fora
+            matricula.adicionarAvaliacao(tipo, nota());
         } catch (Exception ex) {
             Componentes.mostrarErro(this, ex);
             return;
@@ -184,8 +185,19 @@ public class NotasPanel extends JPanel implements Atualizavel {
         String situacao = String.valueOf(matricula.getSituacao());
         lblMedia.setText(String.format("Média: %.2f", matricula.calcularMedia()));
         lblSituacao.setText("Situação: " + situacao);
-        lblSituacao.setForeground(situacao.toUpperCase().startsWith("APROVADO")
-                ? Estilo.COR_SUCESSO : Estilo.COR_PERIGO);
+        lblSituacao.setForeground(corDaSituacao(situacao));
+    }
+
+    /** APROVADA em verde, REPROVADA/CANCELADA em vermelho e ATIVA (em andamento) em cinza. */
+    private static java.awt.Color corDaSituacao(String situacao) {
+        String s = situacao.toUpperCase();
+        if (s.startsWith("APROVAD")) {
+            return Estilo.COR_SUCESSO;
+        }
+        if (s.startsWith("REPROVAD") || s.startsWith("CANCELAD")) {
+            return Estilo.COR_PERIGO;
+        }
+        return Estilo.COR_SECUNDARIA;
     }
 
     private Avaliacao avaliacaoSelecionada() {
