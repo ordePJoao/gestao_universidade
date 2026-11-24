@@ -52,7 +52,7 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
         Componentes.textoDoCombo(cbTurma, t -> t.getCodigo() + " - " + t.getDisciplina().getNome()
                 + " (" + t.getSemestre() + ") - " + t.getVagasDisponiveis() + " vaga(s)");
 
-        this.buscaAluno = new BuscaAlunoPanel(universidade, aluno -> atualizarTabela());
+        this.buscaAluno = new BuscaAlunoPanel(universidade, this::atualizarTabela);
 
         JPanel formulario = Estilo.formulario("Turma para matrícula");
         Estilo.adicionarCampo(formulario, 0, "Turma", cbTurma);
@@ -92,7 +92,10 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
     }
 
     private void atualizarTabela() {
-        Aluno alunoSelecionado = buscaAluno.getAlunoSelecionado();
+        atualizarTabela((buscaAluno != null) ? buscaAluno.getAlunoSelecionado() : null);
+    }
+
+    private void atualizarTabela(Aluno alunoSelecionado) {
         modeloMatriculas.setRowCount(0);
         matriculasNaTabela.clear();
         for (Turma turma : universidade.getTurmas()) {
@@ -107,7 +110,8 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
                         turma.getCodigo(),
                         turma.getDisciplina().getNome(),
                         String.valueOf(m.getData()),
-                        String.valueOf(m.getStatus())});
+                        String.valueOf(m.getStatus())
+                });
             }
         }
     }
