@@ -143,6 +143,6 @@ class MatriculaLeticiaTest {
         assertEquals(original.getData(), restaurada.getData());
         assertEquals(9.0, restaurada.calcularMedia(), 0.0001);
         assertEquals(2, restaurada.getAvaliacoes().size());
-        assertEquals(StatusMatricula.ATIVA, restaurada.getStatus());
+        assertEquals(StatusMatricula.APROVADA, restaurada.getStatus());
     }
 }
