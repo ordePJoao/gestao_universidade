@@ -101,3 +101,18 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR59-CT02** | Busca por CPF (com e sem pontuação) | `Universidade`, `Aluno` | Buscar por `"555.666.777-88"`, `"55566677788"` e termo numérico curto `"555"` | Localiza o aluno independente da máscara de CPF e ignora termos menores que 11 dígitos | Ativo (Passou) |
 | **PR59-CT03** | Busca por matrícula e termos inválidos | `Universidade`, `Aluno` | Chamar `buscarAluno("2026bsi0001")`, `"inexistente"`, `""` e `null` | Retorna o aluno correspondente para matrícula válida e lista vazia para termos inválidos | Ativo (Passou) |
 | **PR59-CT04** | Busca exata com exceção | `Universidade`, `Aluno`, `AlunoNaoEncontradoException` | Chamar `buscarPorMatricula("2026BSI0002")` e `buscarPorMatricula("2026BSI9999")` | Retorna o `Aluno` quando existe e lança `AlunoNaoEncontradoException` quando não encontra | Ativo (Passou) |
+
+---
+
+## 9. Suíte `TestPR62` — Validação da Task #10.1 / Issue #54 (`src/test/java/br/edu/universidade/TestPR62.java`)
+* **Resultado da Execução:** `Tests run: 7, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR62-CT01** | Estado inicial sem avaliações | `Matricula`, `StatusMatricula` | Instanciar `Matricula(aluno, turma)` e verificar `MEDIA_APROVACAO`, `getStatus()`, `getSituacao()` e `calcularMedia()` | Constante igual a `6.0`, status `ATIVA`, situação `"ATIVA"` e média `0.0` | Ativo (Passou) |
+| **PR62-CT02** | Aprovação no corte exato (`6.0`) | `Matricula`, `Avaliacao`, `StatusMatricula` | Adicionar avaliação `"P1"` com nota `6.0` | Calcula média `6.0` e consolida status e situação para `APROVADA` | Ativo (Passou) |
+| **PR62-CT03** | Reprovação abaixo da média (`< 6.0`) | `Matricula`, `Avaliacao`, `StatusMatricula` | Adicionar avaliação `"P1"` com nota `5.9` | Calcula média `5.9` e consolida status e situação para `REPROVADA` | Ativo (Passou) |
+| **PR62-CT04** | Recálculo dinâmico ao alterar nota | `Matricula`, `Avaliacao`, `StatusMatricula` | Lançar notas `8.0` e `6.0` (`APROVADA`) e alterar primeira nota para `2.0` via `alterarNota()` | Recalcula média para `4.0` e atualiza status consolidado para `REPROVADA` | Ativo (Passou) |
+| **PR62-CT05** | Sincronização de cancelamento em `Aluno` | `Aluno`, `Matricula`, `Turma`, `StatusMatricula` | Associar matrícula ao aluno e chamar `aluno.cancelarMatricula(m)` e `aluno.cancelarMatricula(null)` | Marca matrícula como `CANCELADA`, remove da lista do aluno e ignora `null` sem exceção | Ativo (Passou) |
+| **PR62-CT06** | Proteção de status `CANCELADA` | `Matricula`, `StatusMatricula` | Aprovar matrícula (`10.0`), cancelar via `cancelar()`, chamar `consolidarSituacao()` e tentar lançar nova nota (`8.0`) | Preserva `CANCELADA` sem sobrescrever e lança `IllegalStateException` ao tentar adicionar avaliação | Ativo (Passou) |
+| **PR62-CT07** | Validação de notas e contrato `Exibivel` | `Matricula`, `NotaInvalidaException`, `Exibivel`, `Aluno`, `Curso`, `Disciplina`, `Turma` | Tentar notas `10.5` e `-0.5` e invocar `exibirDados()` polimorficamente nas entidades | Lança `NotaInvalidaException` mantendo `ATIVA` e retorna descrição formatada não vazia em todas as classes | Ativo (Passou) |
