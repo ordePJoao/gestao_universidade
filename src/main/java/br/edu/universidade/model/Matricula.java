@@ -13,6 +13,7 @@ import java.util.Objects;
 public class Matricula implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    public static final double MEDIA_APROVACAO = 6.0;
 
     private final Aluno aluno;
     private final Turma turma;
@@ -29,7 +30,11 @@ public class Matricula implements Serializable {
 
     //Avaliacao internamente: ela pertence a esta matricula.
     public void adicionarAvaliacao(String tipo, double nota) throws NotaInvalidaException {
+        if (this.status == StatusMatricula.CANCELADA) {
+            throw new IllegalStateException("Não é possível lançar avaliação em matrícula cancelada.");
+        }
         avaliacoes.add(new Avaliacao(tipo, nota));
+        consolidarSituacao();
     }
 
     // Media simples das notas. Sem avaliacoes, retorna 0.0
@@ -44,8 +49,22 @@ public class Matricula implements Serializable {
         this.status = StatusMatricula.CANCELADA;
     }
 
+    public StatusMatricula consolidarSituacao() {
+        if (this.status == StatusMatricula.CANCELADA) {
+            return this.status;
+        }
+        if (avaliacoes.isEmpty()) {
+            this.status = StatusMatricula.ATIVA;
+            return this.status;
+        }
+        this.status = (calcularMedia() >= MEDIA_APROVACAO)
+                ? StatusMatricula.APROVADA
+                : StatusMatricula.REPROVADA;
+        return this.status;
+    }
+
     public String getSituacao() {
-        return status.name();
+        return consolidarSituacao().name();
     }
 
     public Aluno getAluno() {
@@ -61,7 +80,7 @@ public class Matricula implements Serializable {
     }
 
     public StatusMatricula getStatus() {
-        return status;
+        return consolidarSituacao();
     }
 
     public List<Avaliacao> getAvaliacoes() {
