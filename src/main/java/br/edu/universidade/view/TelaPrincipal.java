@@ -60,10 +60,10 @@ public class TelaPrincipal extends JFrame {
         abas.setFont(Estilo.FONTE_NEGRITO);
         abas.addTab("Alunos", new AlunoPanel(universidade));
         abas.addTab("Professores", new ProfessorPanel(universidade));
-        // TODO P8 (#20/#21): passar a mesma instância -> new CursoPanel(universidade), etc.
-        abas.addTab("Cursos", new CursoPanel());
-        abas.addTab("Disciplinas", new DisciplinaPanel());
-        abas.addTab("Turmas", new TurmaPanel());
+        abas.addTab("Cursos", new CursoPanel(universidade));
+        abas.addTab("Disciplinas", new DisciplinaPanel(universidade));
+        abas.addTab("Turmas", new TurmaPanel(universidade));
+        // TODO P8 (#21): passar a mesma instância para Matrículas e Notas
         abas.addTab("Matrículas", new MatriculaPanel());
         abas.addTab("Notas", new NotasPanel());
 
