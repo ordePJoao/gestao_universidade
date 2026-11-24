@@ -1,7 +1,9 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.model.Aluno;
 import br.edu.universidade.model.Avaliacao;
 import br.edu.universidade.model.Matricula;
+import br.edu.universidade.model.StatusMatricula;
 import br.edu.universidade.model.Turma;
 import br.edu.universidade.model.Universidade;
 
@@ -21,9 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tela de Lançamento de Notas: lançar avaliação (tipo e nota), alterar nota,
- * ver média e situação (tasks #16 e #21, P8).
- * Média e situação vêm da própria Matricula (calcularMedia() e getSituacao()).
+ * Tela de Lançamento de Notas: buscar aluno, escolher a turma do aluno, lançar/alterar
+ * avaliação (tipo e nota de 0 a 10), ver média simples e situação (aprovada >= 7)
+ * (tasks #16, #21 e #35 / #21.1).
  */
 public class NotasPanel extends JPanel implements Atualizavel {
 
@@ -34,7 +36,8 @@ public class NotasPanel extends JPanel implements Atualizavel {
     /** Avaliações da matrícula escolhida, na mesma ordem das linhas da tabela. */
     private final List<Avaliacao> avaliacoesNaTabela = new ArrayList<>();
 
-    // Formulário
+    // Busca de aluno + Formulário
+    private final BuscaAlunoPanel buscaAluno;
     private final JComboBox<Matricula> cbMatricula = new JComboBox<>();
     private final JComboBox<String> cbTipoAvaliacao = new JComboBox<>(TIPOS_AVALIACAO);
     private final JSpinner spnNota = new JSpinner(new SpinnerNumberModel(0.0, 0.0, 10.0, 0.5));
@@ -60,19 +63,26 @@ public class NotasPanel extends JPanel implements Atualizavel {
 
         tela.add(Estilo.titulo("Lançamento de Notas"), BorderLayout.NORTH);
 
-        Componentes.textoDoCombo(cbMatricula, m -> m.getAluno().getNome() + " ("
-                + m.getAluno().getMatricula() + ") - " + m.getTurma().getCodigo() + " "
-                + m.getTurma().getDisciplina().getNome());
-        cbTipoAvaliacao.setEditable(true); // permite digitar outro tipo
+        Componentes.textoDoCombo(cbMatricula, m -> m.getTurma().getCodigo() + " - "
+                + m.getTurma().getDisciplina().getNome()
+                + " (" + m.getTurma().getSemestre() + ")");
+        cbTipoAvaliacao.setEditable(true);
+
+        this.buscaAluno = new BuscaAlunoPanel(universidade, aluno -> carregarTurmasDoAluno(aluno));
 
         JPanel formulario = Estilo.formulario("Avaliação");
-        Estilo.adicionarCampo(formulario, 0, "Matrícula", cbMatricula);
+        Estilo.adicionarCampo(formulario, 0, "Turma do aluno", cbMatricula);
         Estilo.adicionarCampo(formulario, 1, "Tipo", cbTipoAvaliacao);
         Estilo.adicionarCampo(formulario, 2, "Nota (0 a 10)", spnNota);
 
+        JPanel selecao = new JPanel(new BorderLayout(8, 8));
+        selecao.setBackground(Estilo.COR_FUNDO);
+        selecao.add(buscaAluno, BorderLayout.NORTH);
+        selecao.add(formulario, BorderLayout.CENTER);
+
         JPanel topo = new JPanel(new BorderLayout());
         topo.setBackground(Estilo.COR_FUNDO);
-        topo.add(formulario, BorderLayout.CENTER);
+        topo.add(selecao, BorderLayout.CENTER);
         topo.add(Estilo.barraBotoes(btnLancar, btnAlterarNota), BorderLayout.SOUTH);
 
         JScrollPane scrollTabela = new JScrollPane(tblAvaliacoes);
@@ -96,14 +106,25 @@ public class NotasPanel extends JPanel implements Atualizavel {
         atualizar();
     }
 
-    /** Recarrega a lista de matrículas (de todas as turmas) e as avaliações da escolhida. */
+    /** Recarrega a busca de alunos e as turmas do aluno selecionado. */
     @Override
     public void atualizar() {
-        List<Matricula> todas = new ArrayList<>();
-        for (Turma turma : universidade.getTurmas()) {
-            todas.addAll(turma.getMatriculas());
+        buscaAluno.recarregar();
+        carregarTurmasDoAluno(buscaAluno.getAlunoSelecionado());
+    }
+
+    private void carregarTurmasDoAluno(Aluno aluno) {
+        List<Matricula> matriculasDoAluno = new ArrayList<>();
+        if (aluno != null) {
+            for (Turma turma : universidade.getTurmas()) {
+                for (Matricula m : turma.getMatriculas()) {
+                    if (m.getAluno().equals(aluno)) {
+                        matriculasDoAluno.add(m);
+                    }
+                }
+            }
         }
-        Componentes.recarregarCombo(cbMatricula, todas);
+        Componentes.recarregarCombo(cbMatricula, matriculasDoAluno);
         mostrarAvaliacoes();
     }
 
@@ -112,7 +133,6 @@ public class NotasPanel extends JPanel implements Atualizavel {
         btnLancar.addActionListener(e -> lancar());
         btnAlterarNota.addActionListener(e -> alterarNota());
 
-        // Selecionar avaliação -> carrega tipo e nota no formulário
         tblAvaliacoes.getSelectionModel().addListSelectionListener(e -> {
             Avaliacao a = avaliacaoSelecionada();
             if (!e.getValueIsAdjusting() && a != null) {
@@ -125,9 +145,14 @@ public class NotasPanel extends JPanel implements Atualizavel {
     // ---------- Ações ----------
 
     private void lancar() {
+        Aluno aluno = buscaAluno.getAlunoSelecionado();
+        if (aluno == null) {
+            Componentes.aviso(this, "Busque e selecione um aluno primeiro.", "Sem aluno");
+            return;
+        }
         Matricula matricula = (Matricula) cbMatricula.getSelectedItem();
         if (matricula == null) {
-            Componentes.aviso(this, "Matricule um aluno numa turma (aba Matrículas) primeiro.",
+            Componentes.aviso(this, "O aluno selecionado não possui matrícula em nenhuma turma. Matricule-o na aba Matrículas primeiro.",
                     "Sem matrícula");
             return;
         }
@@ -138,8 +163,6 @@ public class NotasPanel extends JPanel implements Atualizavel {
             return;
         }
         try {
-            // A Matricula cria a Avaliacao, que valida a nota (0 a 10)
-            // e lança NotaInvalidaException se estiver fora
             matricula.adicionarAvaliacao(tipo, nota());
         } catch (Exception ex) {
             Componentes.mostrarErro(this, ex);
@@ -165,7 +188,7 @@ public class NotasPanel extends JPanel implements Atualizavel {
 
     // ---------- Auxiliares ----------
 
-    /** Mostra as avaliações, a média e a situação da matrícula escolhida no combo. */
+    /** Mostra as avaliações, a média simples e a situação (APROVADA >= 7.0) da matrícula escolhida. */
     private void mostrarAvaliacoes() {
         modeloAvaliacoes.setRowCount(0);
         avaliacoesNaTabela.clear();
@@ -182,13 +205,19 @@ public class NotasPanel extends JPanel implements Atualizavel {
             modeloAvaliacoes.addRow(new Object[]{a.getTipo(), String.format("%.1f", a.getNota())});
         }
 
-        String situacao = String.valueOf(matricula.getSituacao());
-        lblMedia.setText(String.format("Média: %.2f", matricula.calcularMedia()));
+        double media = matricula.calcularMedia();
+        String situacao;
+        if (matricula.getStatus() == StatusMatricula.CANCELADA) {
+            situacao = "CANCELADA";
+        } else {
+            situacao = media >= 7.0 ? "APROVADA" : "REPROVADA";
+        }
+        lblMedia.setText(String.format("Média: %.2f", media));
         lblSituacao.setText("Situação: " + situacao);
         lblSituacao.setForeground(corDaSituacao(situacao));
     }
 
-    /** APROVADA em verde, REPROVADA/CANCELADA em vermelho e ATIVA (em andamento) em cinza. */
+    /** APROVADA em verde, REPROVADA/CANCELADA em vermelho e demais em cinza. */
     private static java.awt.Color corDaSituacao(String situacao) {
         String s = situacao.toUpperCase();
         if (s.startsWith("APROVAD")) {
@@ -207,6 +236,11 @@ public class NotasPanel extends JPanel implements Atualizavel {
     }
 
     private double nota() {
+        try {
+            spnNota.commitEdit();
+        } catch (java.text.ParseException ignored) {
+            // mantém valor atual ou lança se inválido no modelo
+        }
         return ((Number) spnNota.getValue()).doubleValue();
     }
 }
