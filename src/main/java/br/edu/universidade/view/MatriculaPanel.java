@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Tela de Matrícula: matricular aluno em turma e cancelar matrícula (tasks #16 e #21, P8).
- * As regras (turma cheia, matrícula duplicada) ficam no núcleo: a tela só mostra a mensagem.
+ * Tela de Matrícula: buscar aluno, conferir dados, escolher turma e matricular/cancelar
+ * (tasks #16, #21 e #35 / #21.1).
  */
 public class MatriculaPanel extends JPanel implements Atualizavel {
 
@@ -27,8 +27,8 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
     /** Matrículas na mesma ordem das linhas da tabela. */
     private final List<Matricula> matriculasNaTabela = new ArrayList<>();
 
-    // Formulário
-    private final JComboBox<Aluno> cbAluno = new JComboBox<>();
+    // Busca de aluno + Turma
+    private final BuscaAlunoPanel buscaAluno;
     private final JComboBox<Turma> cbTurma = new JComboBox<>();
 
     // Botões
@@ -49,17 +49,22 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
 
         tela.add(Estilo.titulo("Matrículas"), BorderLayout.NORTH);
 
-        Componentes.textoDoCombo(cbAluno, a -> a.getMatricula() + " - " + a.getNome());
         Componentes.textoDoCombo(cbTurma, t -> t.getCodigo() + " - " + t.getDisciplina().getNome()
                 + " (" + t.getSemestre() + ") - " + t.getVagasDisponiveis() + " vaga(s)");
 
-        JPanel formulario = Estilo.formulario("Matricular aluno em turma");
-        Estilo.adicionarCampo(formulario, 0, "Aluno", cbAluno);
-        Estilo.adicionarCampo(formulario, 1, "Turma", cbTurma);
+        this.buscaAluno = new BuscaAlunoPanel(universidade, this::atualizarTabela);
+
+        JPanel formulario = Estilo.formulario("Turma para matrícula");
+        Estilo.adicionarCampo(formulario, 0, "Turma", cbTurma);
+
+        JPanel selecao = new JPanel(new BorderLayout(8, 8));
+        selecao.setBackground(Estilo.COR_FUNDO);
+        selecao.add(buscaAluno, BorderLayout.NORTH);
+        selecao.add(formulario, BorderLayout.CENTER);
 
         JPanel topo = new JPanel(new BorderLayout());
         topo.setBackground(Estilo.COR_FUNDO);
-        topo.add(formulario, BorderLayout.CENTER);
+        topo.add(selecao, BorderLayout.CENTER);
         topo.add(Estilo.barraBotoes(btnMatricular, btnCancelarMatricula), BorderLayout.SOUTH);
 
         JScrollPane scrollTabela = new JScrollPane(tblMatriculas);
@@ -77,16 +82,27 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
         atualizar();
     }
 
-    /** Recarrega combos e tabela. As matrículas são lidas de cada turma da Universidade. */
+    /** Recarrega busca de alunos, turmas e tabela de matrículas. */
     @Override
     public void atualizar() {
-        Componentes.recarregarCombo(cbAluno, universidade.getAlunos());
+        buscaAluno.recarregar();
         Componentes.recarregarCombo(cbTurma, universidade.getTurmas());
+        atualizarTabela();
+        cbTurma.repaint(); // atualiza o texto "x vaga(s)" do combo
+    }
 
+    private void atualizarTabela() {
+        atualizarTabela((buscaAluno != null) ? buscaAluno.getAlunoSelecionado() : null);
+    }
+
+    private void atualizarTabela(Aluno alunoSelecionado) {
         modeloMatriculas.setRowCount(0);
         matriculasNaTabela.clear();
         for (Turma turma : universidade.getTurmas()) {
             for (Matricula m : turma.getMatriculas()) {
+                if (alunoSelecionado != null && !m.getAluno().equals(alunoSelecionado)) {
+                    continue;
+                }
                 matriculasNaTabela.add(m);
                 modeloMatriculas.addRow(new Object[]{
                         m.getAluno().getMatricula(),
@@ -94,34 +110,34 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
                         turma.getCodigo(),
                         turma.getDisciplina().getNome(),
                         String.valueOf(m.getData()),
-                        String.valueOf(m.getStatus())});
+                        String.valueOf(m.getStatus())
+                });
             }
         }
-        cbTurma.repaint(); // atualiza o texto "x vaga(s)" do combo
     }
 
     // ---------- Ações ----------
 
     private void matricular() {
-        Aluno aluno = (Aluno) cbAluno.getSelectedItem();
+        Aluno aluno = buscaAluno.getAlunoSelecionado();
         Turma turma = (Turma) cbTurma.getSelectedItem();
         if (aluno == null) {
-            Componentes.aviso(this, "Cadastre um aluno na aba Alunos primeiro.", "Sem aluno");
+            Componentes.aviso(this, "Busque e selecione um aluno primeiro.", "Sem aluno");
             return;
         }
         if (turma == null) {
             Componentes.aviso(this, "Abra uma turma na aba Turmas primeiro.", "Sem turma");
             return;
         }
-        // Mesmo aluno duas vezes na mesma turma (MatriculaDuplicadaException no núcleo)
+        // Mesmo aluno duas vezes na mesma turma
         for (Matricula existente : turma.getMatriculas()) {
-            if (existente.getAluno() == aluno) {
+            if (existente.getAluno().equals(aluno)) {
                 Componentes.aviso(this, aluno.getNome() + " já está matriculado(a) na turma "
                         + turma.getCodigo() + ".", "Matrícula duplicada");
                 return;
             }
         }
-        // Turma cheia (TurmaCheiaException no núcleo)
+        // Turma cheia
         if (!turma.temVaga()) {
             Componentes.aviso(this, "A turma " + turma.getCodigo() + " está cheia ("
                     + turma.getVagas() + " vagas).", "Turma cheia");
@@ -129,14 +145,13 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
         }
         try {
             Matricula matricula = new Matricula(aluno, turma);
-            // ocupa a vaga na turma (se o construtor da Matricula ainda não tiver feito isso)
             if (!turma.getMatriculas().contains(matricula) && !turma.adicionarMatricula(matricula)) {
                 Componentes.aviso(this, "Não foi possível matricular na turma " + turma.getCodigo() + ".",
                         "Matrícula não realizada");
                 return;
             }
             if (!aluno.getMatriculas().contains(matricula)) {
-                aluno.getMatriculas().add(matricula);   // aparece na lista do aluno
+                aluno.getMatriculas().add(matricula);
             }
         } catch (Exception ex) {
             Componentes.mostrarErro(this, ex);
@@ -158,9 +173,9 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
             return;
         }
         try {
-            m.cancelar();                           // status CANCELADA
-            m.getTurma().removerMatricula(m);       // libera a vaga
-            m.getAluno().cancelarMatricula(m);      // tira da lista do aluno
+            m.cancelar();
+            m.getTurma().removerMatricula(m);
+            m.getAluno().cancelarMatricula(m);
         } catch (Exception ex) {
             Componentes.mostrarErro(this, ex);
             return;
