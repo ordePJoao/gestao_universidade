@@ -46,8 +46,12 @@ public class Aluno extends Pessoa implements Serializable {
     }
     
     //Remove uma matrícula específica da lista do aluno
-    public void cancelarMatricula(Matricula m) { 
-        this.matriculas.remove(m); 
+    public void cancelarMatricula(Matricula m) {
+        if (m == null) {
+            return;
+        }
+        m.cancelar();
+        matriculas.remove(m);
     }
 
     //Getters e Setters
