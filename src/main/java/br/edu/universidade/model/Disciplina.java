@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * Representa uma disciplina acadêmica oferecida pela universidade.
  */
-public class Disciplina implements Serializable {
+public class Disciplina implements Serializable, Exibivel {
 
     private static final long serialVersionUID = 1L;
 
@@ -63,6 +63,7 @@ public class Disciplina implements Serializable {
     /**
      * Retorna os dados formatados da disciplina.
      */
+    @Override
     public String exibirDados() {
         return String.format("Disciplina [%s] %s (%dh)", codigo, nome, cargaHoraria);
     }
