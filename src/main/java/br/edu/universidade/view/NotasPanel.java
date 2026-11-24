@@ -206,12 +206,8 @@ public class NotasPanel extends JPanel implements Atualizavel {
         }
 
         double media = matricula.calcularMedia();
-        String situacao;
-        if (matricula.getStatus() == StatusMatricula.CANCELADA) {
-            situacao = "CANCELADA";
-        } else {
-            situacao = media >= 7.0 ? "APROVADA" : "REPROVADA";
-        }
+        String situacao = matricula.getSituacao();
+
         lblMedia.setText(String.format("Média: %.2f", media));
         lblSituacao.setText("Situação: " + situacao);
         lblSituacao.setForeground(corDaSituacao(situacao));
