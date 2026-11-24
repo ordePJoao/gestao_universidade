@@ -63,9 +63,8 @@ public class TelaPrincipal extends JFrame {
         abas.addTab("Cursos", new CursoPanel(universidade));
         abas.addTab("Disciplinas", new DisciplinaPanel(universidade));
         abas.addTab("Turmas", new TurmaPanel(universidade));
-        // TODO P8 (#21): passar a mesma instância para Matrículas e Notas
-        abas.addTab("Matrículas", new MatriculaPanel());
-        abas.addTab("Notas", new NotasPanel());
+        abas.addTab("Matrículas", new MatriculaPanel(universidade));
+        abas.addTab("Notas", new NotasPanel(universidade));
 
         // Ao trocar de aba, a tela aberta recarrega suas listas (se souber fazer isso)
         abas.addChangeListener(e -> atualizarAbaAtual());
