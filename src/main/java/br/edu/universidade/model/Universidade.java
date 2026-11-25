@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.time.Year;
+import java.util.concurrent.ThreadLocalRandom;
+import br.edu.universidade.exception.AlunoNaoEncontradoException;
+import java.text.Normalizer;
 
 /**
  * Objeto raiz do sistema de Gestão Universitária.
@@ -21,6 +25,7 @@ public class Universidade implements Serializable {
     private final List<Curso> cursos;
     private final List<Disciplina> disciplinas;
     private final List<Turma> turmas;
+    private final List<Departamento> departamentos;
 
     public Universidade() {
         this("Universidade Federal");
@@ -33,6 +38,7 @@ public class Universidade implements Serializable {
         this.cursos = new ArrayList<>();
         this.disciplinas = new ArrayList<>();
         this.turmas = new ArrayList<>();
+        this.departamentos = new ArrayList<>();
     }
 
     public String getNome() {
@@ -54,6 +60,12 @@ public class Universidade implements Serializable {
     }
 
     public boolean cadastrarAluno(Aluno aluno) {
+        if (aluno == null) { return false; }
+
+        boolean semCodigo = aluno.getCodigoMatricula() == null || aluno.getCodigoMatricula().isBlank();
+        if (semCodigo && aluno.getCurso() != null) {
+            aluno.setCodigoMatricula(gerarMatricula(aluno.getCurso()));
+        }
         return adicionarAluno(aluno);
     }
 
@@ -85,6 +97,46 @@ public class Universidade implements Serializable {
         return alunos.stream()
                 .filter(a -> matricula.equalsIgnoreCase(a.getMatricula()))
                 .findFirst();
+    }
+
+    public String gerarMatricula(Curso curso) {
+        if (curso == null) { throw new IllegalArgumentException("Curso não pode ser nulo."); }
+        String prefixo = Year.now().getValue() + curso.getCodigo();
+        for (int tentativa = 0; tentativa < 10_000; tentativa++) {
+            String codigo = prefixo + String.format("%04d", ThreadLocalRandom.current().nextInt(10_000));
+            if (buscarAlunoPorMatricula(codigo).isEmpty()) { return codigo; }
+        }
+        throw new IllegalStateException("Não há mais códigos de matrícula livres para o curso " + curso.getCodigo());
+    }
+
+    public Aluno buscarPorMatricula(String matricula) throws AlunoNaoEncontradoException {
+        return buscarAlunoPorMatricula(matricula)
+                .orElseThrow(() -> new AlunoNaoEncontradoException(matricula));
+    }
+
+    /** Busca por matrícula, CPF (com ou sem pontuação) ou parte do nome (sem acento e sem diferenciar maiúsculas). */
+    public List<Aluno> buscarAluno(String termo) {
+        List<Aluno> resultado = new ArrayList<>();
+        if (termo == null || termo.isBlank()) { return resultado; }
+        String termoTexto = normalizar(termo);
+        String termoDigitos = termo.replaceAll("\\D", "");
+
+        for (Aluno a : alunos) {
+            boolean porMatricula = a.getMatricula() != null && a.getMatricula().equalsIgnoreCase(termo.trim());
+            boolean porCpf = termoDigitos.length() == 11
+                    && termoDigitos.equals(a.getCpf() == null ? "" : a.getCpf().replaceAll("\\D", ""));
+            boolean porNome = normalizar(a.getNome()).contains(termoTexto);
+
+            if (porMatricula || porCpf || porNome) { resultado.add(a); }
+        } return resultado;
+    }
+
+    private static String normalizar(String texto) {
+        if (texto == null) { return ""; }
+        return Normalizer.normalize(texto, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .trim();
     }
 
     // ==========================================
@@ -253,5 +305,27 @@ public class Universidade implements Serializable {
         return turmas.stream()
                 .filter(t -> codigo.equalsIgnoreCase(t.getCodigo()))
                 .findFirst();
+    }
+
+    // ==========================================
+    // DEPARTAMENTOS
+    // ==========================================
+
+    public List<Departamento> getDepartamentos() {
+        return Collections.unmodifiableList(departamentos);
+    }
+
+    public boolean adicionarDepartamento(Departamento departamento) {
+        if (departamento == null || departamentos.contains(departamento)) {
+            return false;
+        }
+        return departamentos.add(departamento);
+    }
+
+    public boolean removerDepartamento(Departamento departamento) {
+        if (departamento == null) {
+            return false;
+        }
+        return departamentos.remove(departamento);
     }
 }

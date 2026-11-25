@@ -9,7 +9,7 @@ import java.util.Objects;
 /**
  * Representa um curso de graduação, agregando suas disciplinas.
  */
-public class Curso implements Serializable {
+public class Curso implements Serializable, Exibivel {
 
     private static final long serialVersionUID = 1L;
 
@@ -104,6 +104,7 @@ public class Curso implements Serializable {
     /**
      * Retorna os dados formatados do curso e a quantidade de disciplinas vinculadas.
      */
+    @Override
     public String exibirDados() {
         return String.format("Curso [%s] %s (%dh) - %d disciplina(s)",
                 codigo, nome, cargaHoraria, disciplinas.size());

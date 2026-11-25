@@ -10,8 +10,7 @@ import java.util.Objects;
  * Representa uma turma de uma disciplina ministrada por um professor em um semestre,
  * controlando vagas e matrículas associadas.
  */
-// TODO: adicionar "implements Exibivel" e "@Override" em exibirDados() após merge da interface Exibivel na develop.
-public class Turma implements Serializable {
+public class Turma implements Serializable, Exibivel {
 
     private static final long serialVersionUID = 1L;
 
@@ -159,12 +158,13 @@ public class Turma implements Serializable {
     /**
      * Retorna os dados formatados da turma, incluindo disciplina, professor e ocupação de vagas.
      */
+    @Override
     public String exibirDados() {
         return String.format("Turma [%s] - %s | Semestre: %s | Prof.: %s | Vagas: %d/%d",
                 codigo,
                 disciplina.getNome(),
                 semestre,
-                professor.toString(),
+                professor.getNome(),
                 getVagasOcupadas(),
                 vagas);
     }

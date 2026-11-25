@@ -6,7 +6,7 @@ import java.io.Serializable;
 //Classe abstrata que serve como base para Aluno e Professor
 //Biblioteca Serializable para permitir a gravação do objeto num arquivo
 
-public abstract class Pessoa implements Serializable {
+public abstract class Pessoa implements Serializable, Exibivel {
     //Identificador de versao para a serialização
     private static final long serialVersionUID = 1L;
     
@@ -26,9 +26,10 @@ public abstract class Pessoa implements Serializable {
     public abstract String getIdent();
 
 
-    //Metodo comum herdado pelas subclasses
-    public void exibirDados() {
-        System.out.println("Nome: " + nome + " | CPF: " + cpf + " | Email: " + email);
+    //Metodo comum herdado pelas subclasses (contrato da interface Exibivel)
+    @Override
+    public String exibirDados() {
+        return "Nome: " + nome + " | CPF: " + cpf + " | Email: " + email;
     }
     
     //Getters e Setters para encapsulamento
