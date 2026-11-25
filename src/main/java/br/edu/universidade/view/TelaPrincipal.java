@@ -60,6 +60,7 @@ public class TelaPrincipal extends JFrame {
         abas.setFont(Estilo.FONTE_NEGRITO);
         abas.addTab("Alunos", new AlunoPanel(universidade));
         abas.addTab("Professores", new ProfessorPanel(universidade));
+        abas.addTab("Departamentos", new DepartamentoPanel(universidade));
         abas.addTab("Cursos", new CursoPanel(universidade));
         abas.addTab("Disciplinas", new DisciplinaPanel(universidade));
         abas.addTab("Turmas", new TurmaPanel(universidade));
@@ -155,7 +156,7 @@ public class TelaPrincipal extends JFrame {
         JMenuBar barra = new JMenuBar();
         barra.add(criarMenuArquivo());
         barra.add(criarMenuModulos("Cadastros", KeyEvent.VK_C,
-                "Alunos", "Professores", "Cursos", "Disciplinas", "Turmas"));
+                "Alunos", "Professores", "Departamentos", "Cursos", "Disciplinas", "Turmas"));
         barra.add(criarMenuModulos("Acadêmico", KeyEvent.VK_D, "Matrículas", "Notas"));
         barra.add(criarMenuAjuda());
         return barra;
