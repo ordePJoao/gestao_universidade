@@ -1,5 +1,6 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.exception.CpfInvalidoException;
 import br.edu.universidade.exception.UniversidadeException;
 import br.edu.universidade.model.Aluno;
 import br.edu.universidade.model.Universidade;
@@ -142,6 +143,7 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         }
 
         try {
+            validarCpf(cpf);
             if (editando != null) { // edição: a matrícula (identificador) não muda
                 editando.setNome(nome);
                 editando.setCpf(cpf);
@@ -154,6 +156,9 @@ public class AlunoPanel extends JPanel implements Atualizavel {
                 }
                 universidade.cadastrarAluno(new Aluno(nome, cpf, email, matricula, dataIngresso));
             }
+        } catch (CpfInvalidoException ex) {
+            mostrarErro(ex);
+            return;
         } catch (Exception ex) {
             mostrarErro(ex);
             return;
@@ -215,6 +220,12 @@ public class AlunoPanel extends JPanel implements Atualizavel {
             }
         }
         return false;
+    }
+
+    private void validarCpf(String cpf) throws CpfInvalidoException {
+        if (cpf == null || cpf.replaceAll("\\D", "").length() != 11) {
+            throw new CpfInvalidoException(cpf);
+        }
     }
 
     private void preencherFormulario(Aluno aluno) {
