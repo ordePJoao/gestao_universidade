@@ -122,7 +122,7 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         alunosNaTabela.clear();
         for (Aluno aluno : universidade.getAlunos()) {
             alunosNaTabela.add(aluno);
-            String nomeCurso = aluno.getCurso() != null ? aluno.getCurso().getNome() : "(sem curso)";
+            String nomeCurso = aluno.getCurso() != null ? aluno.getCurso().getNome() : "Sem curso";
             modeloAlunos.addRow(new Object[]{
                     aluno.getMatricula(),
                     aluno.getNome(),
@@ -132,6 +132,7 @@ public class AlunoPanel extends JPanel implements Atualizavel {
                     formatarData(aluno.getDataIngresso()),
                     aluno.getMatriculas().size()});
         }
+
         buscaPanel.recarregar();
     }
 
@@ -143,7 +144,10 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         // Selecionar na tabela -> carrega no formulário para editar
         tblAlunos.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                preencherFormulario(alunoSelecionadoNaTabela());
+                Aluno selecionado = alunoSelecionadoNaTabela();
+                if (selecionado != null) {
+                    preencherFormulario(selecionado);
+                }
             }
         });
     }
@@ -252,6 +256,12 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         preencherFormulario(aluno);
     }
 
+    private void validarCpf(String cpf) throws CpfInvalidoException {
+        if (cpf == null || cpf.replaceAll("\\D", "").length() != 11) {
+            throw new CpfInvalidoException(cpf);
+        }
+    }
+
     private Aluno alunoSelecionadoNaTabela() {
         int linha = tblAlunos.getSelectedRow();
         return linha >= 0 ? alunosNaTabela.get(tblAlunos.convertRowIndexToModel(linha)) : null;
@@ -266,12 +276,6 @@ public class AlunoPanel extends JPanel implements Atualizavel {
             }
         }
         return false;
-    }
-
-    private void validarCpf(String cpf) throws CpfInvalidoException {
-        if (cpf == null || cpf.replaceAll("\\D", "").length() != 11) {
-            throw new CpfInvalidoException(cpf);
-        }
     }
 
     private void preencherFormulario(Aluno aluno) {
