@@ -116,3 +116,17 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR62-CT05** | Sincronização de cancelamento em `Aluno` | `Aluno`, `Matricula`, `Turma`, `StatusMatricula` | Associar matrícula ao aluno e chamar `aluno.cancelarMatricula(m)` e `aluno.cancelarMatricula(null)` | Marca matrícula como `CANCELADA`, remove da lista do aluno e ignora `null` sem exceção | Ativo (Passou) |
 | **PR62-CT06** | Proteção de status `CANCELADA` | `Matricula`, `StatusMatricula` | Aprovar matrícula (`10.0`), cancelar via `cancelar()`, chamar `consolidarSituacao()` e tentar lançar nova nota (`8.0`) | Preserva `CANCELADA` sem sobrescrever e lança `IllegalStateException` ao tentar adicionar avaliação | Ativo (Passou) |
 | **PR62-CT07** | Validação de notas e contrato `Exibivel` | `Matricula`, `NotaInvalidaException`, `Exibivel`, `Aluno`, `Curso`, `Disciplina`, `Turma` | Tentar notas `10.5` e `-0.5` e invocar `exibirDados()` polimorficamente nas entidades | Lança `NotaInvalidaException` mantendo `ATIVA` e retorna descrição formatada não vazia em todas as classes | Ativo (Passou) |
+
+---
+
+## 10. Suíte `TestPR65` — Validação da Task #19.2 / Issue #33 (`src/test/java/br/edu/universidade/TestPR65.java`)
+* **Resultado da Execução:** `Tests run: 6, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR65-CT01** | Estrutura visual e campo matrícula somente leitura | `AlunoPanel`, `Atualizavel`, `BuscaAlunoPanel`, `Curso` | Instanciar `AlunoPanel(uni)` e inspecionar componentes, contrato `Atualizavel`, combo de cursos e botões | Implementa `Atualizavel`, integra `BuscaAlunoPanel`, mantém `txtMatricula` não editável (`"(gerada ao salvar)"`) e exibe botões `Salvar`, `Limpar` e `Excluir` | Ativo (Passou) |
+| **PR65-CT02** | Cadastro com curso e geração automática de matrícula | `AlunoPanel`, `Universidade`, `Aluno`, `Curso` | Preencher dados válidos, selecionar curso `BCC` e invocar `salvar()` | Cadastra o aluno na `Universidade`, gera matrícula contendo `"BCC"` e atualiza a tabela | Ativo (Passou) |
+| **PR65-CT03** | Rejeição de dados inválidos (e-mail e data) | `AlunoPanel`, `Universidade` | Tentar salvar com e-mail sem `@` (`"carlos.ufu.br"`) e data inexistente (`"31/02/2026"`) | Exibe aviso e impede o cadastro na `Universidade` *(nota: validação de formato de CPF ainda pendente em `Pessoa`)* | Ativo (Passou) |
+| **PR65-CT04** | Bloqueio de CPF duplicado e campos obrigatórios | `AlunoPanel`, `Universidade`, `Aluno` | Tentar cadastrar aluno com CPF já existente (com máscara) e com campo `Nome` vazio | Bloqueia duplicidade e impede gravação de campos obrigatórios vazios | Ativo (Passou) |
+| **PR65-CT05** | Edição de aluno selecionado na tabela | `AlunoPanel`, `Universidade`, `Aluno`, `Curso` | Selecionar linha na `tblAlunos`, alterar nome e curso para `BSI` e invocar `salvar()` | Atualiza o registro existente e a tabela sem duplicar o aluno | Ativo (Passou) |
+| **PR65-CT06** | Bloqueio de exclusão com matrícula ativa | `AlunoPanel`, `Universidade`, `Aluno`, `Matricula`, `Turma` | Tentar excluir aluno com matrícula ativa e depois cancelar a matrícula via `cancelarMatricula()` | Impede exclusão enquanto houver matrícula vinculada e libera após o cancelamento | Ativo (Passou) |
