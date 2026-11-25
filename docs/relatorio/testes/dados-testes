@@ -1,0 +1,568 @@
+package br.edu.universidade;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * Arquivo único de preparação de dados, teste de fluxo e validação de exceções
+ * para o projeto gestao_universidade (Java 17, Maven, javax.swing, java.io).
+ *
+ * Critérios cobertos:
+ * - Dados de exemplo: 2 cursos, 3 disciplinas, 2 professores, 5 alunos, 2 turmas
+ * - Fluxo: curso, disciplina, turma, aluno, matrícula, notas, média e situação
+ * - Exceções: turma cheia, matrícula duplicada, nota inválida, CPF inválido, aluno não encontrado
+ * - Persistência: salvar em data/universidade.dat e reabrir mantendo os dados
+ */
+public class DemonstracaoCompleta {
+
+    private static final Path ARQUIVO_DADOS = Paths.get("data", "universidade.dat");
+
+    public static void main(String[] args) {
+        System.out.println("=== INICIANDO DEMONSTRACAO: gestao_universidade ===");
+
+        try {
+            // 1. Garante diretorio data/ e limpa execucao anterior para teste limpo
+            Files.createDirectories(ARQUIVO_DADOS.getParent());
+            Files.deleteIfExists(ARQUIVO_DADOS);
+
+            // Primeira execucao sem arquivo -> Universidade vazia
+            Universidade univ = carregarOuCriarUniversidade(ARQUIVO_DADOS);
+            System.out.println("Primeira execucao -> Cursos iniciais: " + univ.getCursos().size());
+
+            // 2. Carga dos dados de exemplo (2 cursos, 3 disciplinas, 2 professores, 5 alunos, 2 turmas)
+            popularDadosDemonstracao(univ);
+
+            // 3. Execucao do fluxo completo (curso, disciplina, turma, aluno, matricula, notas, media, situacao)
+            executarFluxoAcademico(univ);
+
+            // 4. Teste obrigatorio das 5 excecoes customizadas
+            testarExcecoesObrigatorias(univ);
+
+            // 5. Persistencia em data/universidade.dat
+            salvarUniversidade(univ, ARQUIVO_DADOS);
+            System.out.println("Estado salvo em: " + ARQUIVO_DADOS.toAbsolutePath());
+
+            // 6. Fechar e reabrir o sistema -> validar manutencao dos dados
+            Universidade univReaberta = carregarOuCriarUniversidade(ARQUIVO_DADOS);
+            validarPersistencia(univReaberta);
+
+            System.out.println("=== DEMONSTRACAO CONCLUIDA COM SUCESSO ===");
+        } catch (Exception e) {
+            System.err.println("Falha durante a demonstracao: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public static void popularDadosDemonstracao(Universidade univ) {
+        // 2 Cursos
+        Curso cursoSistemas = new Curso("CSI", "Sistemas de Informacao", "FACOM");
+        Curso cursoEngenharia = new Curso("ENG", "Engenharia de Computacao", "FEELT");
+        univ.adicionarCurso(cursoSistemas);
+        univ.adicionarCurso(cursoEngenharia);
+
+        // 3 Disciplinas
+        Disciplina poo = new Disciplina("POO01", "Programacao Orientada a Objetos", 60, cursoSistemas);
+        Disciplina bd = new Disciplina("BD002", "Banco de Dados Relacionais", 60, cursoSistemas);
+        Disciplina embed = new Disciplina("EMB03", "Sistemas Embarcados", 60, cursoEngenharia);
+        univ.adicionarDisciplina(poo);
+        univ.adicionarDisciplina(bd);
+        univ.adicionarDisciplina(embed);
+
+        // 2 Professores (herdam de Pessoa)
+        Professor profAna = new Professor("12345678901", "Ana Paula Rocha", "ana.rocha@ufu.br", "PROF-101", "FACOM");
+        Professor profCarlos = new Professor("23456789012", "Carlos Eduardo Lima", "carlos.lima@ufu.br", "PROF-102", "FEELT");
+        univ.adicionarProfessor(profAna);
+        univ.adicionarProfessor(profCarlos);
+
+        // 5 Alunos (herdam de Pessoa) - Turma T01 tera capacidade 3 para facilitar teste de turma cheia
+        Aluno a1 = new Aluno("34567890123", "Lucas Mendes", "lucas.mendes@ufu.br", "20261001", cursoSistemas);
+        Aluno a2 = new Aluno("45678901234", "Mariana Souza", "mariana.souza@ufu.br", "20261002", cursoSistemas);
+        Aluno a3 = new Aluno("56789012345", "Rafael Oliveira", "rafael.oliveira@ufu.br", "20261003", cursoSistemas);
+        Aluno a4 = new Aluno("67890123456", "Beatriz Costa", "beatriz.costa@ufu.br", "20261004", cursoEngenharia);
+        Aluno a5 = new Aluno("78901234567", "Pedro Henrique", "pedro.henrique@ufu.br", "20261005", cursoEngenharia);
+        univ.adicionarAluno(a1);
+        univ.adicionarAluno(a2);
+        univ.adicionarAluno(a3);
+        univ.adicionarAluno(a4);
+        univ.adicionarAluno(a5);
+
+        // 2 Turmas
+        Turma turmaPoo = new Turma("T01-POO", "2026/2", 3, poo, profAna);
+        Turma turmaEmbed = new Turma("T02-EMB", "2026/2", 30, embed, profCarlos);
+        univ.adicionarTurma(turmaPoo);
+        univ.adicionarTurma(turmaEmbed);
+
+        System.out.printf(Locale.US,
+                "Dados carregados: %d cursos, %d disciplinas, %d professores, %d alunos, %d turmas.%n",
+                univ.getCursos().size(),
+                univ.getDisciplinas().size(),
+                univ.getProfessores().size(),
+                univ.getAlunos().size(),
+                univ.getTurmas().size()
+        );
+    }
+
+    public static void executarFluxoAcademico(Universidade univ)
+            throws TurmaCheiaException, MatriculaDuplicadaException, NotaInvalidaException, AlunoNaoEncontradoException {
+
+        Turma turmaPoo = univ.buscarTurmaPorCodigo("T01-POO");
+        Aluno a1 = univ.buscarAlunoPorMatricula("20261001");
+        Aluno a2 = univ.buscarAlunoPorMatricula("20261002");
+
+        // Matricula de alunos na turma
+        turmaPoo.matricular(a1);
+        turmaPoo.matricular(a2);
+
+        // Lancamento de notas e calculo de media/situacao
+        Matricula m1 = turmaPoo.buscarMatricula(a1.getMatricula());
+        m1.adicionarAvaliacao("P1", 8.5);
+        m1.adicionarAvaliacao("P2", 9.0);
+        m1.adicionarAvaliacao("Trabalho", 8.0);
+
+        Matricula m2 = turmaPoo.buscarMatricula(a2.getMatricula());
+        m2.adicionarAvaliacao("P1", 4.5);
+        m2.adicionarAvaliacao("P2", 5.0);
+        m2.adicionarAvaliacao("Trabalho", 4.0);
+
+        System.out.printf(Locale.US,
+                "Fluxo POO -> %s: media=%.2f (%s) | %s: media=%.2f (%s)%n",
+                a1.getNome(), m1.calcularMedia(), m1.getSituacao(),
+                a2.getNome(), m2.calcularMedia(), m2.getSituacao()
+        );
+    }
+
+    public static void testarExcecoesObrigatorias(Universidade univ) {
+        Turma turmaPoo = univ.buscarTurmaPorCodigo("T01-POO");
+
+        // 1. Matricula duplicada
+        try {
+            Aluno a1 = univ.buscarAlunoPorMatricula("20261001");
+            turmaPoo.matricular(a1);
+        } catch (MatriculaDuplicadaException e) {
+            System.out.println("[OK] MatriculaDuplicadaException: " + e.getMessage());
+        } catch (TurmaCheiaException e) {
+            System.out.println("[INFO] Turma ja atingiu capacidade antes da duplicidade: " + e.getMessage());
+        }
+
+        // 2. Turma cheia (capacidade de T01-POO = 3; ja ha 2 alunos matriculados)
+        try {
+            Aluno a3 = univ.buscarAlunoPorMatricula("20261003");
+            Aluno a4 = univ.buscarAlunoPorMatricula("20261004");
+            turmaPoo.matricular(a3); // 3a vaga ocupada
+            turmaPoo.matricular(a4); // deve lancar TurmaCheiaException
+        } catch (TurmaCheiaException | MatriculaDuplicadaException e) {
+            System.out.println("[OK] TurmaCheiaException: " + e.getMessage());
+        }
+
+        // 3. Nota invalida (fora do intervalo 0.0 a 10.0)
+        try {
+            Matricula m1 = turmaPoo.buscarMatricula("20261001");
+            m1.adicionarAvaliacao("Sub", 11.5);
+        } catch (NotaInvalidaException e) {
+            System.out.println("[OK] NotaInvalidaException: " + e.getMessage());
+        }
+
+        // 4. CPF invalido
+        try {
+            new Aluno("123", "CPF Curto", "cpf@ufu.br", "20269999", univ.getCursos().get(0));
+        } catch (CpfInvalidoException e) {
+            System.out.println("[OK] CpfInvalidoException: " + e.getMessage());
+        }
+
+        // 5. Aluno nao encontrado
+        try {
+            univ.buscarAlunoPorMatricula("MAT-INEXISTENTE");
+        } catch (AlunoNaoEncontradoException e) {
+            System.out.println("[OK] AlunoNaoEncontradoException: " + e.getMessage());
+        }
+    }
+
+    public static void salvarUniversidade(Universidade univ, Path arquivo) throws IOException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(arquivo.toFile()))) {
+            oos.writeObject(univ);
+        }
+    }
+
+    public static Universidade carregarOuCriarUniversidade(Path arquivo) {
+        File file = arquivo.toFile();
+        if (!file.exists()) {
+            return new Universidade("Universidade Federal de Uberlandia");
+        }
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+            return (Universidade) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            throw new IllegalStateException("Erro ao carregar dados persistidos: " + e.getMessage(), e);
+        }
+    }
+
+    public static void validarPersistencia(Universidade univ) {
+        System.out.printf(Locale.US,
+                "Pos-reabertura -> Cursos: %d | Disciplinas: %d | Professores: %d | Alunos: %d | Turmas: %d%n",
+                univ.getCursos().size(),
+                univ.getDisciplinas().size(),
+                univ.getProfessores().size(),
+                univ.getAlunos().size(),
+                univ.getTurmas().size()
+        );
+        Turma t = univ.buscarTurmaPorCodigo("T01-POO");
+        System.out.println("Matriculas preservadas em T01-POO: " + t.getMatriculas().size());
+        for (Matricula m : t.getMatriculas()) {
+            System.out.printf(Locale.US, "  - %s (%s): media=%.2f -> %s%n",
+                    m.getAluno().getNome(),
+                    m.getAluno().getMatricula(),
+                    m.calcularMedia(),
+                    m.getSituacao()
+            );
+        }
+    }
+
+    // =========================================================================
+    // EXCECOES CUSTOMIZADAS (substitua pelos imports de br.edu.universidade.exception.*)
+    // =========================================================================
+
+    public static class TurmaCheiaException extends Exception {
+        private static final long serialVersionUID = 1L;
+        public TurmaCheiaException(String message) { super(message); }
+    }
+
+    public static class MatriculaDuplicadaException extends Exception {
+        private static final long serialVersionUID = 1L;
+        public MatriculaDuplicadaException(String message) { super(message); }
+    }
+
+    public static class NotaInvalidaException extends Exception {
+        private static final long serialVersionUID = 1L;
+        public NotaInvalidaException(String message) { super(message); }
+    }
+
+    public static class CpfInvalidoException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        public CpfInvalidoException(String message) { super(message); }
+    }
+
+    public static class AlunoNaoEncontradoException extends Exception {
+        private static final long serialVersionUID = 1L;
+        public AlunoNaoEncontradoException(String message) { super(message); }
+    }
+
+    // =========================================================================
+    // MODELOS DE DOMINIO (substitua pelos imports de br.edu.universidade.model.*)
+    // =========================================================================
+
+    public interface Exibivel extends Serializable {
+        String exibirDados();
+    }
+
+    public static abstract class Pessoa implements Exibivel, Serializable {
+        private static final long serialVersionUID = 1L;
+        private String cpf;
+        private String nome;
+        private String email;
+
+        protected Pessoa(String cpf, String nome, String email) {
+            setCpf(cpf);
+            this.nome = nome;
+            this.email = email;
+        }
+
+        public String getCpf() { return cpf; }
+        public void setCpf(String cpf) {
+            String digitos = cpf == null ? "" : cpf.replaceAll("\\D", "");
+            if (digitos.length() != 11) {
+                throw new CpfInvalidoException("CPF invalido: " + cpf + " (deve conter 11 digitos).");
+            }
+            this.cpf = digitos;
+        }
+
+        public String getNome() { return nome; }
+        public void setNome(String nome) { this.nome = nome; }
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public abstract String getIdent();
+    }
+
+    public static class Aluno extends Pessoa {
+        private static final long serialVersionUID = 1L;
+        private String matricula;
+        private Curso curso;
+
+        public Aluno(String cpf, String nome, String email, String matricula, Curso curso) {
+            super(cpf, nome, email);
+            this.matricula = matricula;
+            this.curso = curso;
+        }
+
+        public String getMatricula() { return matricula; }
+        public void setMatricula(String matricula) { this.matricula = matricula; }
+
+        public Curso getCurso() { return curso; }
+        public void setCurso(Curso curso) { this.curso = curso; }
+
+        @Override
+        public String getIdent() { return matricula; }
+
+        @Override
+        public String exibirDados() {
+            return String.format("Aluno[%s] %s - Curso: %s", matricula, getNome(), curso != null ? curso.getNome() : "Sem curso");
+        }
+    }
+
+    public static class Professor extends Pessoa {
+        private static final long serialVersionUID = 1L;
+        private String registro;
+        private String departamento;
+
+        public Professor(String cpf, String nome, String email, String registro, String departamento) {
+            super(cpf, nome, email);
+            this.registro = registro;
+            this.departamento = departamento;
+        }
+
+        public String getRegistro() { return registro; }
+        public void setRegistro(String registro) { this.registro = registro; }
+
+        public String getDepartamento() { return departamento; }
+        public void setDepartamento(String departamento) { this.departamento = departamento; }
+
+        @Override
+        public String getIdent() { return registro; }
+
+        @Override
+        public String exibirDados() {
+            return String.format("Professor[%s] %s - Depto: %s", registro, getNome(), departamento);
+        }
+    }
+
+    public static class Curso implements Exibivel, Serializable {
+        private static final long serialVersionUID = 1L;
+        private String codigo;
+        private String nome;
+        private String departamento;
+
+        public Curso(String codigo, String nome, String departamento) {
+            this.codigo = codigo;
+            this.nome = nome;
+            this.departamento = departamento;
+        }
+
+        public String getCodigo() { return codigo; }
+        public void setCodigo(String codigo) { this.codigo = codigo; }
+
+        public String getNome() { return nome; }
+        public void setNome(String nome) { this.nome = nome; }
+
+        public String getDepartamento() { return departamento; }
+        public void setDepartamento(String departamento) { this.departamento = departamento; }
+
+        @Override
+        public String exibirDados() {
+            return String.format("Curso[%s] %s (%s)", codigo, nome, departamento);
+        }
+    }
+
+    public static class Disciplina implements Exibivel, Serializable {
+        private static final long serialVersionUID = 1L;
+        private String codigo;
+        private String nome;
+        private int cargaHoraria;
+        private Curso curso;
+
+        public Disciplina(String codigo, String nome, int cargaHoraria, Curso curso) {
+            this.codigo = codigo;
+            this.nome = nome;
+            this.cargaHoraria = cargaHoraria;
+            this.curso = curso;
+        }
+
+        public String getCodigo() { return codigo; }
+        public void setCodigo(String codigo) { this.codigo = codigo; }
+
+        public String getNome() { return nome; }
+        public void setNome(String nome) { this.nome = nome; }
+
+        public int getCargaHoraria() { return cargaHoraria; }
+        public void setCargaHoraria(int cargaHoraria) { this.cargaHoraria = cargaHoraria; }
+
+        public Curso getCurso() { return curso; }
+        public void setCurso(Curso curso) { this.curso = curso; }
+
+        @Override
+        public String exibirDados() {
+            return String.format("Disciplina[%s] %s (%dh)", codigo, nome, cargaHoraria);
+        }
+    }
+
+    public static class Avaliacao implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String descricao;
+        private double nota;
+
+        public Avaliacao(String descricao, double nota) throws NotaInvalidaException {
+            this.descricao = descricao;
+            setNota(nota);
+        }
+
+        public String getDescricao() { return descricao; }
+        public void setDescricao(String descricao) { this.descricao = descricao; }
+
+        public double getNota() { return nota; }
+        public void setNota(double nota) throws NotaInvalidaException {
+            if (Double.isNaN(nota) || nota < 0.0 || nota > 10.0) {
+                throw new NotaInvalidaException("Nota invalida: " + nota + " (deve estar entre 0.0 e 10.0).");
+            }
+            this.nota = nota;
+        }
+    }
+
+    public static class Matricula implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private Aluno aluno;
+        private Turma turma;
+        private final List<Avaliacao> avaliacoes = new ArrayList<>();
+
+        public Matricula(Aluno aluno, Turma turma) {
+            this.aluno = aluno;
+            this.turma = turma;
+        }
+
+        public Aluno getAluno() { return aluno; }
+        public Turma getTurma() { return turma; }
+        public List<Avaliacao> getAvaliacoes() { return Collections.unmodifiableList(avaliacoes); }
+
+        public void adicionarAvaliacao(String descricao, double nota) throws NotaInvalidaException {
+            avaliacoes.add(new Avaliacao(descricao, nota));
+        }
+
+        public double calcularMedia() {
+            if (avaliacoes.isEmpty()) {
+                return 0.0;
+            }
+            double soma = 0.0;
+            for (Avaliacao av : avaliacoes) {
+                soma += av.getNota();
+            }
+            return soma / avaliacoes.size();
+        }
+
+        public String getSituacao() {
+            return calcularMedia() >= 6.0 ? "Aprovado" : "Reprovado";
+        }
+    }
+
+    public static class Turma implements Exibivel, Serializable {
+        private static final long serialVersionUID = 1L;
+        private String codigo;
+        private String semestre;
+        private int capacidadeMaxima;
+        private Disciplina disciplina;
+        private Professor professor;
+        private final List<Matricula> matriculas = new ArrayList<>();
+
+        public Turma(String codigo, String semestre, int capacidadeMaxima, Disciplina disciplina, Professor professor) {
+            this.codigo = codigo;
+            this.semestre = semestre;
+            this.capacidadeMaxima = capacidadeMaxima;
+            this.disciplina = disciplina;
+            this.professor = professor;
+        }
+
+        public String getCodigo() { return codigo; }
+        public String getSemestre() { return semestre; }
+        public int getCapacidadeMaxima() { return capacidadeMaxima; }
+        public Disciplina getDisciplina() { return disciplina; }
+        public Professor getProfessor() { return professor; }
+        public List<Matricula> getMatriculas() { return Collections.unmodifiableList(matriculas); }
+
+        public void matricular(Aluno aluno) throws TurmaCheiaException, MatriculaDuplicadaException {
+            for (Matricula m : matriculas) {
+                if (m.getAluno().getMatricula().equals(aluno.getMatricula())) {
+                    throw new MatriculaDuplicadaException(
+                            "Aluno " + aluno.getMatricula() + " ja matriculado na turma " + codigo + "."
+                    );
+                }
+            }
+            if (matriculas.size() >= capacidadeMaxima) {
+                throw new TurmaCheiaException(
+                        "Turma " + codigo + " atingiu a capacidade maxima de " + capacidadeMaxima + " vagas."
+                );
+            }
+            matriculas.add(new Matricula(aluno, this));
+        }
+
+        public Matricula buscarMatricula(String matriculaAluno) throws AlunoNaoEncontradoException {
+            for (Matricula m : matriculas) {
+                if (m.getAluno().getMatricula().equals(matriculaAluno)) {
+                    return m;
+                }
+            }
+            throw new AlunoNaoEncontradoException(
+                    "Matricula " + matriculaAluno + " nao encontrada na turma " + codigo + "."
+            );
+        }
+
+        @Override
+        public String exibirDados() {
+            return String.format("Turma[%s] %s (%d/%d vagas)",
+                    codigo, disciplina != null ? disciplina.getNome() : "", matriculas.size(), capacidadeMaxima);
+        }
+    }
+
+    public static class Universidade implements Serializable {
+        private static final long serialVersionUID = 1L;
+        private String nome;
+        private final List<Curso> cursos = new ArrayList<>();
+        private final List<Disciplina> disciplinas = new ArrayList<>();
+        private final List<Professor> professores = new ArrayList<>();
+        private final List<Aluno> alunos = new ArrayList<>();
+        private final List<Turma> turmas = new ArrayList<>();
+
+        public Universidade(String nome) {
+            this.nome = nome;
+        }
+
+        public String getNome() { return nome; }
+        public List<Curso> getCursos() { return Collections.unmodifiableList(cursos); }
+        public List<Disciplina> getDisciplinas() { return Collections.unmodifiableList(disciplinas); }
+        public List<Professor> getProfessores() { return Collections.unmodifiableList(professores); }
+        public List<Aluno> getAlunos() { return Collections.unmodifiableList(alunos); }
+        public List<Turma> getTurmas() { return Collections.unmodifiableList(turmas); }
+
+        public void adicionarCurso(Curso c) { cursos.add(c); }
+        public void adicionarDisciplina(Disciplina d) { disciplinas.add(d); }
+        public void adicionarProfessor(Professor p) { professores.add(p); }
+        public void adicionarAluno(Aluno a) { alunos.add(a); }
+        public void adicionarTurma(Turma t) { turmas.add(t); }
+
+        public Aluno buscarAlunoPorMatricula(String matricula) throws AlunoNaoEncontradoException {
+            for (Aluno a : alunos) {
+                if (a.getMatricula().equals(matricula)) {
+                    return a;
+                }
+            }
+            throw new AlunoNaoEncontradoException("Aluno com matricula '" + matricula + "' nao encontrado.");
+        }
+
+        public Turma buscarTurmaPorCodigo(String codigo) {
+            for (Turma t : turmas) {
+                if (t.getCodigo().equals(codigo)) {
+                    return t;
+                }
+            }
+            throw new IllegalArgumentException("Turma com codigo '" + codigo + "' nao encontrada.");
+        }
+    }
+}
