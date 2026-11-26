@@ -27,6 +27,18 @@ public class Departamento implements Serializable {
             System.out.println("Professor ja cadastrado neste departamento.");
         }
     }
+    //remover professor
+    public boolean removerProfessor(Professor p) {
+        if (p == null) {
+            return false;
+        }
+        return this.professores.remove(p);
+    }
+
+    @Override
+    public String toString() {
+        return nome;
+    }
 
     //Getters e Setters com acesso encapsulado
     public String getNome() {

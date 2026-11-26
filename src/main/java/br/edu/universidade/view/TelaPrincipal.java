@@ -61,7 +61,7 @@ public class TelaPrincipal extends JFrame {
         abas.setFont(Estilo.FONTE_NEGRITO);
         abas.addTab("Alunos", new AlunoPanel(universidade));
         abas.addTab("Professores", new ProfessorPanel(universidade));
-        abas.addTab("Departamentos", criarPainelProvisorio("Departamentos"));
+        abas.addTab("Departamentos", new DepartamentoPanel(universidade));
         abas.addTab("Cursos", new CursoPanel(universidade));
         abas.addTab("Disciplinas", new DisciplinaPanel(universidade));
         abas.addTab("Turmas", new TurmaPanel(universidade));
