@@ -152,3 +152,14 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR68-CT02** | Estrutura visual da aba Departamentos | `DepartamentoPanel`, `Atualizavel`, `Professor` | Instanciar `DepartamentoPanel(uni)` e inspecionar interface `Atualizavel`, combo de professores e botões | Implementa `Atualizavel`, popula `cbProfessor` e exibe os botões `Salvar`, `Limpar`, `Excluir`, `Adicionar professor` e `Remover professor` | Ativo (Passou) |
 | **PR68-CT03** | Cadastro de departamento e bloqueio de duplicidade | `DepartamentoPanel`, `Universidade`, `Departamento` | Tentar salvar nome vazio, cadastrar `"FACOM"` e tentar cadastrar `"facom"` | Rejeita nome vazio, cadastra o departamento na tabela e bloqueia nomes duplicados ignorando maiúsculas/minúsculas | Ativo (Passou) |
 | **PR68-CT04** | Vinculação e desvinculação de professores no departamento | `DepartamentoPanel`, `Departamento`, `Professor` | Selecionar departamento na tabela, vincular professor, tentar vincular novamente e remover da lista | Atualiza contagem na tabela para `1`, bloqueia professor repetido e remove professor zerando a contagem | Ativo (Passou) |
+---
+
+## 13. Suíte `TestPR69` — Validação da Task #22 / #15 / #18 (`src/test/java/br/edu/universidade/TestPR69.java`)
+* **Resultado da Execução:** `Tests run: 4, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR69-CT01** | Inicialização da janela principal | `TelaPrincipal`, `Universidade` | Instanciar `TelaPrincipal()` e inspecionar título, dimensão mínima (`1000x650`) e `defaultCloseOperation` | Configura título `"Gestão Universidade - Secretaria"`, `DO_NOTHING_ON_CLOSE` e instância única de `Universidade` | Ativo (Passou) |
+| **PR69-CT02** | Registro das 8 abas oficiais | `TelaPrincipal`, `AlunoPanel`, `ProfessorPanel`, `DepartamentoPanel`, `CursoPanel`, `DisciplinaPanel`, `TurmaPanel`, `MatriculaPanel`, `NotasPanel` | Inspecionar títulos e componentes das abas no `JTabbedPane` | Exibe as 8 abas na ordem esperada, utilizando `DepartamentoPanel` oficial na aba `"Departamentos"` | Ativo (Passou) |
+| **PR69-CT03** | Navegação entre abas e barra de menus | `TelaPrincipal` | Verificar menus (`Arquivo`, `Cadastros`, `Acadêmico`, `Ajuda`) e chamar `abrirAba("Departamentos")`, `abrirAba("Notas")` e aba inválida | Alterna o índice selecionado corretamente e ignora títulos inexistentes sem erro | Ativo (Passou) |
+| **PR69-CT04** | Persistência via `salvar()` | `TelaPrincipal`, `RepositorioArquivo`, `Universidade` | Chamar `tela.salvar()` | Persiste o estado da `Universidade` sem exceções e retorna `true` | Ativo (Passou) |
