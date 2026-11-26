@@ -130,3 +130,14 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR65-CT04** | Bloqueio de CPF duplicado e campos obrigatórios | `AlunoPanel`, `Universidade`, `Aluno` | Tentar cadastrar aluno com CPF já existente (com máscara) e com campo `Nome` vazio | Bloqueia duplicidade e impede gravação de campos obrigatórios vazios | Ativo (Passou) |
 | **PR65-CT05** | Edição de aluno selecionado na tabela | `AlunoPanel`, `Universidade`, `Aluno`, `Curso` | Selecionar linha na `tblAlunos`, alterar nome e curso para `BSI` e invocar `salvar()` | Atualiza o registro existente e a tabela sem duplicar o aluno | Ativo (Passou) |
 | **PR65-CT06** | Bloqueio de exclusão com matrícula ativa | `AlunoPanel`, `Universidade`, `Aluno`, `Matricula`, `Turma` | Tentar excluir aluno com matrícula ativa e depois cancelar a matrícula via `cancelarMatricula()` | Impede exclusão enquanto houver matrícula vinculada e libera após o cancelamento | Ativo (Passou) |
+
+---
+
+## 11. Suíte `TestPR66` — Validação da Task #14 (`src/test/java/br/edu/universidade/TestPR66.java`)
+* **Resultado da Execução:** `Tests run: 3, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR66-CT01** | Execução completa do `TesteConsole.main` | `TesteConsole`, `Universidade`, `Aluno`, `Professor`, `Curso`, `Disciplina`, `Turma`, `Matricula`, `RepositorioArquivo` | Executar `TesteConsole.main(new String[]{})` capturando `System.out` | Percorre as 3 etapas (fluxo feliz, exceções e persistência temporária), não registra `[FALHA]` e imprime `TUDO OK` | Ativo (Passou) |
+| **PR66-CT02** | Validação das regras auxiliares de matrícula | `TesteConsole`, `Aluno`, `Turma`, `Matricula`, `MatriculaDuplicadaException`, `TurmaCheiaException` | Invocar `matricular(aluno, turma)` para matrícula válida, repetida e com turma lotada (`1` vaga) | Realiza a primeira matrícula e lança `MatriculaDuplicadaException` e `TurmaCheiaException` nos cenários inválidos | Ativo (Passou) |
+| **PR66-CT03** | Persistência e restauração em arquivo temporário | `TesteConsole`, `RepositorioArquivo`, `Universidade`, `Matricula`, `NotaInvalidaException` | Lançar notas (`8.0`, `6.0`), validar rejeição de nota `11.0`, salvar em arquivo temporário (`Files.createTempFile`) e recarregar | Restaura entidades e média `7.0` sem alterar a pasta oficial `data/` | Ativo (Passou) |
