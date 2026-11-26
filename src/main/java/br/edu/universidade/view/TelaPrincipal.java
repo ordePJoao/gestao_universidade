@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -131,6 +132,16 @@ public class TelaPrincipal extends JFrame {
         }
         dispose();
         System.exit(0);
+    }
+
+    /** Painel provisório até a tela real da aba existir (task #34). */
+    private JPanel criarPainelProvisorio(String nome) {
+        JPanel painel = Estilo.painelTela();
+        painel.add(Estilo.titulo(nome), BorderLayout.NORTH);
+        JLabel aviso = new JLabel("Tela de " + nome + " em construção.", SwingConstants.CENTER);
+        aviso.setFont(Estilo.FONTE_PADRAO);
+        painel.add(aviso, BorderLayout.CENTER);
+        return painel;
     }
 
     // ---------- Navegação ----------
