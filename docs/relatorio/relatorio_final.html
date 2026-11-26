@@ -9,43 +9,65 @@
       margin: 30mm 20mm 20mm 30mm;
     }
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: "Times New Roman", Times, serif;
       font-size: 12pt;
       line-height: 1.5;
       color: #000000;
       margin: 0;
       padding: 0;
     }
-    /* Capa ABNT */
-    .capa {
+    /* Capa e Folha de Rosto ABNT */
+    .capa, .folha-rosto {
       page-break-after: always;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 240mm;
+      min-height: 242mm;
       text-align: center;
     }
-    .capa-topo p {
+    .capa-topo p, .folha-rosto-autores p {
       margin: 2px 0;
       font-weight: bold;
       text-transform: uppercase;
       text-indent: 0;
       text-align: center;
     }
-    .capa-titulo h1 {
-      font-size: 16pt;
+    .autores p {
+      margin: 2px 0;
+      font-weight: normal;
       text-transform: uppercase;
-      margin: 0 0 8px 0;
+      text-indent: 0;
+      text-align: center;
+      font-size: 11.5pt;
+      line-height: 1.35;
     }
-    .capa-titulo p {
+    .capa-titulo h1, .folha-titulo h1 {
+      font-size: 12pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 0 0 4px 0;
+    }
+    .capa-titulo p, .folha-titulo p {
       font-size: 12pt;
       margin: 0;
       text-indent: 0;
       text-align: center;
     }
+    .natureza {
+      width: 8cm;
+      margin-left: auto;
+      text-align: justify;
+      font-size: 10.5pt;
+      line-height: 1.15;
+    }
+    .natureza p {
+      text-indent: 0;
+      margin: 0 0 8px 0;
+    }
     .capa-rodape p {
       margin: 2px 0;
-      font-weight: bold;
+      font-weight: normal;
+      text-transform: uppercase;
       text-indent: 0;
       text-align: center;
     }
@@ -178,25 +200,68 @@
 </head>
 <body>
 
-  <!-- CAPA -->
+  <!-- CAPA (ABNT NBR 14724) -->
   <div class="capa">
-    <div class="capa-topo">
-      <p>UNIVERSIDADE FEDERAL DE UBERLÂNDIA (UFU)</p>
-      <p>FACULDADE DE COMPUTAÇÃO (FACOM)</p>
-      <p>PROGRAMAÇÃO ORIENTADA A OBJETOS</p>
-      <br /><br />
-      <p style="font-weight: normal; text-transform: none; margin-top: 24px;">
-        Grupo: Integrantes do Projeto Gestão Universitária
-      </p>
+    <div>
+      <div class="capa-topo">
+        <p>UNIVERSIDADE FEDERAL DE UBERLÂNDIA (UFU)</p>
+        <p>FACULDADE DE COMPUTAÇÃO (FACOM)</p>
+        <p>CURSO DE GRADUAÇÃO EM SISTEMAS DE INFORMAÇÃO</p>
+      </div>
+      <div class="autores" style="margin-top: 2.2cm;">
+        <p>CARLOS CABRAL DE MENEZES FILHO - 12511BSI248</p>
+        <p>FRED FERREIRA CASTRO - 12511BSI262</p>
+        <p>ISAC ALVES - 12421BSI407</p>
+        <p>JOÃO PEDRO CARDOSO DE OLIVEIRA - 12521BSI228</p>
+        <p>LAURA GRAZIELLE CASTRO NASCIMENTO - 12511BSI247</p>
+        <p>LETHICIA FERREIRA DE ALMEIDA - 12511BSI209</p>
+        <p>LETÍCIA MOURA LEMOS - 12511BSI215</p>
+        <p>LUCIANA FERREIRA DOS SANTOS - 12511BSI235</p>
+        <p>LUIZ EDUARDO ROSA SONODA - 12511BSI272</p>
+      </div>
     </div>
 
     <div class="capa-titulo">
-      <h1>SISTEMA DE GESTÃO UNIVERSITÁRIA</h1>
-      <p>Projeto Final da Disciplina de Programação Orientada a Objetos</p>
+      <h1>SISTEMA DE GESTÃO DE UNIVERSIDADE:</h1>
+      <p>Projeto Final de Programação Orientada a Objetos em Java com Interface Gráfica Swing</p>
     </div>
 
     <div class="capa-rodape">
-      <p>Uberlândia – MG</p>
+      <p>UBERLÂNDIA</p>
+      <p>2026</p>
+    </div>
+  </div>
+
+  <!-- FOLHA DE ROSTO (ABNT NBR 14724) -->
+  <div class="folha-rosto">
+    <div class="autores">
+      <p>CARLOS CABRAL DE MENEZES FILHO - 12511BSI248</p>
+      <p>FRED FERREIRA CASTRO - 12511BSI262</p>
+      <p>ISAC ALVES - 12421BSI407</p>
+      <p>JOÃO PEDRO CARDOSO DE OLIVEIRA - 12521BSI228</p>
+      <p>LAURA GRAZIELLE CASTRO NASCIMENTO - 12511BSI247</p>
+      <p>LETHICIA FERREIRA DE ALMEIDA - 12511BSI209</p>
+      <p>LETÍCIA MOURA LEMOS - 12511BSI215</p>
+      <p>LUCIANA FERREIRA DOS SANTOS - 12511BSI235</p>
+      <p>LUIZ EDUARDO ROSA SONODA - 12511BSI272</p>
+    </div>
+
+    <div>
+      <div class="folha-titulo" style="margin-bottom: 1.5cm;">
+        <h1>SISTEMA DE GESTÃO DE UNIVERSIDADE:</h1>
+        <p>Projeto Final de Programação Orientada a Objetos em Java com Interface Gráfica Swing</p>
+      </div>
+      <div class="natureza">
+        <p>
+          Relatório técnico apresentado à disciplina de Programação Orientada a Objetos do curso de
+          Sistemas de Informação da Universidade Federal de Uberlândia, como requisito parcial para
+          aprovação.
+        </p>
+      </div>
+    </div>
+
+    <div class="capa-rodape">
+      <p>UBERLÂNDIA</p>
       <p>2026</p>
     </div>
   </div>
