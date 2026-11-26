@@ -1,5 +1,6 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.exception.CpfInvalidoException;
 import br.edu.universidade.exception.UniversidadeException;
 import br.edu.universidade.model.Professor;
 import br.edu.universidade.model.Universidade;
@@ -138,6 +139,7 @@ public class ProfessorPanel extends JPanel implements Atualizavel {
         }
 
         try {
+            validarCpf(cpf);
             if (editando != null) { // edição: o SIAPE (identificador) não muda
                 editando.setNome(nome);
                 editando.setCpf(cpf);
@@ -150,6 +152,9 @@ public class ProfessorPanel extends JPanel implements Atualizavel {
                 }
                 universidade.cadastrarProfessor(new Professor(nome, cpf, email, siape, titulacao));
             }
+        } catch (CpfInvalidoException ex) {
+            mostrarErro(ex);
+            return;
         } catch (Exception ex) {
             mostrarErro(ex);
             return;
@@ -211,6 +216,12 @@ public class ProfessorPanel extends JPanel implements Atualizavel {
             }
         }
         return false;
+    }
+
+    private void validarCpf(String cpf) throws CpfInvalidoException {
+        if (cpf == null || cpf.replaceAll("\\D", "").length() != 11) {
+            throw new CpfInvalidoException(cpf);
+        }
     }
 
     private void preencherFormulario(Professor professor) {
