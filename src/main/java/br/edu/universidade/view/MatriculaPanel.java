@@ -1,5 +1,7 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.exception.MatriculaDuplicadaException;
+import br.edu.universidade.exception.TurmaCheiaException;
 import br.edu.universidade.model.Aluno;
 import br.edu.universidade.model.Matricula;
 import br.edu.universidade.model.Turma;
@@ -129,30 +131,14 @@ public class MatriculaPanel extends JPanel implements Atualizavel {
             Componentes.aviso(this, "Abra uma turma na aba Turmas primeiro.", "Sem turma");
             return;
         }
-        // Mesmo aluno duas vezes na mesma turma
-        for (Matricula existente : turma.getMatriculas()) {
-            if (existente.getAluno().equals(aluno)) {
-                Componentes.aviso(this, aluno.getNome() + " já está matriculado(a) na turma "
-                        + turma.getCodigo() + ".", "Matrícula duplicada");
-                return;
-            }
-        }
-        // Turma cheia
-        if (!turma.temVaga()) {
-            Componentes.aviso(this, "A turma " + turma.getCodigo() + " está cheia ("
-                    + turma.getVagas() + " vagas).", "Turma cheia");
-            return;
-        }
+
         try {
-            Matricula matricula = new Matricula(aluno, turma);
-            if (!turma.getMatriculas().contains(matricula) && !turma.adicionarMatricula(matricula)) {
-                Componentes.aviso(this, "Não foi possível matricular na turma " + turma.getCodigo() + ".",
-                        "Matrícula não realizada");
-                return;
-            }
-            if (!aluno.getMatriculas().contains(matricula)) {
-                aluno.getMatriculas().add(matricula);
-            }
+            turma.matricular(aluno);
+            JOptionPane.showMessageDialog(this, "Aluno matriculado com sucesso na turma " + turma.getCodigo() + "!",
+                    "Matrícula realizada", JOptionPane.INFORMATION_MESSAGE);
+        } catch (MatriculaDuplicadaException | TurmaCheiaException ex) {
+            Componentes.mostrarErro(this, ex);
+            return;
         } catch (Exception ex) {
             Componentes.mostrarErro(this, ex);
             return;

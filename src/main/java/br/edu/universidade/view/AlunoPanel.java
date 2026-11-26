@@ -1,11 +1,14 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.exception.CpfInvalidoException;
 import br.edu.universidade.exception.UniversidadeException;
 import br.edu.universidade.model.Aluno;
+import br.edu.universidade.model.Curso;
 import br.edu.universidade.model.Universidade;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -13,6 +16,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -20,8 +24,8 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Tela de Aluno: cadastrar, listar, editar e excluir alunos (tasks #15 e #19, P7).
- * Os dados vêm da instância única de {@link Universidade} recebida da TelaPrincipal.
+ * Tela de Aluno: cadastrar, listar, editar e excluir alunos (Issue #33 / #19.2).
+ * Integra o painel reutilizável de busca, seletor de curso e matrícula gerada automaticamente.
  */
 public class AlunoPanel extends JPanel implements Atualizavel {
 
@@ -30,11 +34,15 @@ public class AlunoPanel extends JPanel implements Atualizavel {
     /** Alunos na mesma ordem das linhas da tabela (linha i -> alunosNaTabela.get(i)). */
     private final List<Aluno> alunosNaTabela = new ArrayList<>();
 
+    // Painel reutilizável de busca e verificação
+    private final BuscaAlunoPanel buscaPanel;
+
     // Formulário
     private final JTextField txtMatricula = new JTextField(12);
     private final JTextField txtNome = new JTextField(25);
     private final JTextField txtCpf = new JTextField(14);
     private final JTextField txtEmail = new JTextField(25);
+    private final JComboBox<Curso> cbCurso = new JComboBox<>();
     private final JTextField txtDataIngresso = new JTextField(10);
 
     // Botões
@@ -44,8 +52,10 @@ public class AlunoPanel extends JPanel implements Atualizavel {
 
     // Tabela
     private final DefaultTableModel modeloAlunos =
-            Estilo.modeloTabela("Matrícula", "Nome", "CPF", "E-mail", "Ingresso", "Matrículas");
+            Estilo.modeloTabela("Matrícula", "Nome", "CPF", "E-mail", "Curso", "Ingresso", "Matrículas");
     private final JTable tblAlunos = Estilo.tabela(modeloAlunos);
+
+    private Aluno alunoEmEdicao;
 
     public AlunoPanel(Universidade universidade) {
         this.universidade = universidade;
@@ -56,17 +66,34 @@ public class AlunoPanel extends JPanel implements Atualizavel {
 
         tela.add(Estilo.titulo("Alunos"), BorderLayout.NORTH);
 
+        // Campo Matrícula sempre somente leitura (gerado ao salvar)
+        txtMatricula.setEditable(false);
+        txtMatricula.setBackground(new Color(0xF8F9FA));
+
+        // Formatação do combo de cursos
+        Componentes.textoDoCombo(cbCurso, Curso::getNome);
+
+        // Painel de busca (task #32 / #35)
+        buscaPanel = new BuscaAlunoPanel(universidade, this::selecionarNaTabela);
+
+        // Formulário
         JPanel formulario = Estilo.formulario("Cadastro de aluno");
-        Estilo.adicionarCampo(formulario, 0, "Matrícula", txtMatricula);
+        Estilo.adicionarCampo(formulario, 0, "Matrícula (gerada)", txtMatricula);
         Estilo.adicionarCampo(formulario, 1, "Nome", txtNome);
         Estilo.adicionarCampo(formulario, 2, "CPF", txtCpf);
         Estilo.adicionarCampo(formulario, 3, "E-mail", txtEmail);
-        Estilo.adicionarCampo(formulario, 4, "Ingresso (dd/mm/aaaa)", txtDataIngresso);
+        Estilo.adicionarCampo(formulario, 4, "Curso", cbCurso);
+        Estilo.adicionarCampo(formulario, 5, "Ingresso (dd/mm/aaaa)", txtDataIngresso);
 
-        JPanel topo = new JPanel(new BorderLayout());
+        JPanel blocoCadastro = new JPanel(new BorderLayout(0, 6));
+        blocoCadastro.setBackground(Estilo.COR_FUNDO);
+        blocoCadastro.add(formulario, BorderLayout.CENTER);
+        blocoCadastro.add(Estilo.barraBotoes(btnSalvar, btnLimpar, btnExcluir), BorderLayout.SOUTH);
+
+        JPanel topo = new JPanel(new BorderLayout(0, 10));
         topo.setBackground(Estilo.COR_FUNDO);
-        topo.add(formulario, BorderLayout.CENTER);
-        topo.add(Estilo.barraBotoes(btnSalvar, btnLimpar, btnExcluir), BorderLayout.SOUTH);
+        topo.add(buscaPanel, BorderLayout.NORTH);
+        topo.add(blocoCadastro, BorderLayout.CENTER);
 
         JScrollPane scrollTabela = new JScrollPane(tblAlunos);
         scrollTabela.setBorder(BorderFactory.createTitledBorder("Alunos cadastrados"));
@@ -82,21 +109,31 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         atualizar();
     }
 
-    /** Recarrega a tabela a partir da Universidade. */
+    /** Recarrega cursos, tabela e painel de busca a partir da Universidade. */
     @Override
     public void atualizar() {
+        Curso cursoSelecionado = (Curso) cbCurso.getSelectedItem();
+        Componentes.recarregarCombo(cbCurso, universidade.getCursos());
+        if (cursoSelecionado != null) {
+            cbCurso.setSelectedItem(cursoSelecionado);
+        }
+
         modeloAlunos.setRowCount(0);
         alunosNaTabela.clear();
         for (Aluno aluno : universidade.getAlunos()) {
             alunosNaTabela.add(aluno);
+            String nomeCurso = aluno.getCurso() != null ? aluno.getCurso().getNome() : "Sem curso";
             modeloAlunos.addRow(new Object[]{
                     aluno.getMatricula(),
                     aluno.getNome(),
                     aluno.getCpf(),
                     aluno.getEmail(),
+                    nomeCurso,
                     formatarData(aluno.getDataIngresso()),
                     aluno.getMatriculas().size()});
         }
+
+        buscaPanel.recarregar();
     }
 
     private void configurarAcoes() {
@@ -107,7 +144,10 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         // Selecionar na tabela -> carrega no formulário para editar
         tblAlunos.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                preencherFormulario(alunoSelecionado());
+                Aluno selecionado = alunoSelecionadoNaTabela();
+                if (selecionado != null) {
+                    preencherFormulario(selecionado);
+                }
             }
         });
     }
@@ -115,14 +155,17 @@ public class AlunoPanel extends JPanel implements Atualizavel {
     // ---------- Ações ----------
 
     private void salvar() {
-        String matricula = txtMatricula.getText().trim();
         String nome = txtNome.getText().trim();
         String cpf = txtCpf.getText().trim();
         String email = txtEmail.getText().trim();
+        Curso curso = (Curso) cbCurso.getSelectedItem();
 
-        if (matricula.isEmpty() || nome.isEmpty() || cpf.isEmpty() || email.isEmpty()
-                || txtDataIngresso.getText().isBlank()) {
-            aviso("Preencha todos os campos.", "Campos obrigatórios");
+        if (nome.isEmpty() || cpf.isEmpty() || email.isEmpty() || txtDataIngresso.getText().isBlank()) {
+            aviso("Preencha todos os campos obrigatórios.", "Campos obrigatórios");
+            return;
+        }
+        if (curso == null) {
+            aviso("Selecione um curso para o aluno.", "Curso obrigatório");
             return;
         }
         if (!email.contains("@")) {
@@ -135,37 +178,45 @@ public class AlunoPanel extends JPanel implements Atualizavel {
             return;
         }
 
-        Aluno editando = alunoSelecionado();
-        if (cpfEmUso(cpf, editando)) {
+        if (cpfEmUso(cpf, alunoEmEdicao)) {
             aviso("Já existe um aluno com o CPF " + cpf + ".", "CPF duplicado");
             return;
         }
 
         try {
-            if (editando != null) { // edição: a matrícula (identificador) não muda
-                editando.setNome(nome);
-                editando.setCpf(cpf);
-                editando.setEmail(email);
-                editando.setDataIngresso(dataIngresso);
+            validarCpf(cpf);
+            if (alunoEmEdicao != null) {
+                alunoEmEdicao.setNome(nome);
+                alunoEmEdicao.setCpf(cpf);
+                alunoEmEdicao.setEmail(email);
+                alunoEmEdicao.setCurso(curso);
+                alunoEmEdicao.setDataIngresso(dataIngresso);
             } else {
-                if (buscarPorMatricula(matricula) != null) {
-                    aviso("Já existe um aluno com a matrícula " + matricula + ".", "Matrícula duplicada");
-                    return;
-                }
-                universidade.cadastrarAluno(new Aluno(nome, cpf, email, matricula, dataIngresso));
+                // Construtor sem matrícula: a Universidade gera automaticamente ao cadastrar
+                Aluno novoAluno = new Aluno(nome, cpf, email, dataIngresso, curso);
+                universidade.cadastrarAluno(novoAluno);
+                txtMatricula.setText(novoAluno.getMatricula());
+                JOptionPane.showMessageDialog(this,
+                        "Aluno cadastrado com sucesso!\nMatrícula gerada: " + novoAluno.getMatricula(),
+                        "Cadastro concluído", JOptionPane.INFORMATION_MESSAGE);
             }
+        } catch (CpfInvalidoException ex) {
+            mostrarErro(ex);
+            return;
         } catch (Exception ex) {
+            // Captura CpfInvalidoException e demais exceções de validação do domínio
             mostrarErro(ex);
             return;
         }
+
         atualizar();
         limparFormulario();
     }
 
     private void excluir() {
-        Aluno aluno = alunoSelecionado();
+        Aluno aluno = alunoEmEdicao != null ? alunoEmEdicao : alunoSelecionadoNaTabela();
         if (aluno == null) {
-            aviso("Selecione um aluno na tabela.", "Excluir aluno");
+            aviso("Selecione um aluno na tabela ou na busca.", "Excluir aluno");
             return;
         }
         if (!aluno.getMatriculas().isEmpty()) {
@@ -192,18 +243,28 @@ public class AlunoPanel extends JPanel implements Atualizavel {
 
     // ---------- Auxiliares ----------
 
-    private Aluno alunoSelecionado() {
-        int linha = tblAlunos.getSelectedRow();
-        return linha >= 0 ? alunosNaTabela.get(tblAlunos.convertRowIndexToModel(linha)) : null;
+    private void selecionarNaTabela(Aluno aluno) {
+        if (aluno == null) {
+            return;
+        }
+        int indice = alunosNaTabela.indexOf(aluno);
+        if (indice >= 0) {
+            int linhaView = tblAlunos.convertRowIndexToView(indice);
+            tblAlunos.setRowSelectionInterval(linhaView, linhaView);
+            tblAlunos.scrollRectToVisible(tblAlunos.getCellRect(linhaView, 0, true));
+        }
+        preencherFormulario(aluno);
     }
 
-    private Aluno buscarPorMatricula(String matricula) {
-        for (Aluno a : universidade.getAlunos()) {
-            if (a.getMatricula().equalsIgnoreCase(matricula)) {
-                return a;
-            }
+    private void validarCpf(String cpf) throws CpfInvalidoException {
+        if (cpf == null || cpf.replaceAll("\\D", "").length() != 11) {
+            throw new CpfInvalidoException(cpf);
         }
-        return null;
+    }
+
+    private Aluno alunoSelecionadoNaTabela() {
+        int linha = tblAlunos.getSelectedRow();
+        return linha >= 0 ? alunosNaTabela.get(tblAlunos.convertRowIndexToModel(linha)) : null;
     }
 
     /** CPF já usado por outro aluno (ignora o próprio aluno em edição e a pontuação). */
@@ -221,23 +282,27 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         if (aluno == null) {
             return;
         }
+        this.alunoEmEdicao = aluno;
         txtMatricula.setText(aluno.getMatricula());
-        txtMatricula.setEditable(false);
         txtNome.setText(aluno.getNome());
         txtCpf.setText(aluno.getCpf());
         txtEmail.setText(aluno.getEmail());
+        cbCurso.setSelectedItem(aluno.getCurso());
         txtDataIngresso.setText(formatarData(aluno.getDataIngresso()));
     }
 
     private void limparFormulario() {
+        this.alunoEmEdicao = null;
         tblAlunos.clearSelection();
-        txtMatricula.setText("");
-        txtMatricula.setEditable(true);
+        txtMatricula.setText("(gerada ao salvar)");
         txtNome.setText("");
         txtCpf.setText("");
         txtEmail.setText("");
+        if (cbCurso.getItemCount() > 0) {
+            cbCurso.setSelectedIndex(0);
+        }
         txtDataIngresso.setText(formatarData(new Date()));
-        txtMatricula.requestFocusInWindow();
+        txtNome.requestFocusInWindow();
     }
 
     private static String formatarData(Date data) {
@@ -263,7 +328,7 @@ public class AlunoPanel extends JPanel implements Atualizavel {
         JOptionPane.showMessageDialog(this, mensagem, titulo, JOptionPane.WARNING_MESSAGE);
     }
 
-    /** Exceções do domínio (CPF inválido etc.) e de validação viram mensagem na tela. */
+    /** Exceções do domínio (CpfInvalidoException etc.) e de validação viram mensagem na tela. */
     private void mostrarErro(Exception ex) {
         String titulo = ex instanceof UniversidadeException || ex instanceof IllegalArgumentException
                 ? "Dados inválidos" : "Erro";

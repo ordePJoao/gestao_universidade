@@ -14,6 +14,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -60,6 +61,7 @@ public class TelaPrincipal extends JFrame {
         abas.setFont(Estilo.FONTE_NEGRITO);
         abas.addTab("Alunos", new AlunoPanel(universidade));
         abas.addTab("Professores", new ProfessorPanel(universidade));
+        abas.addTab("Departamentos", new DepartamentoPanel(universidade));
         abas.addTab("Cursos", new CursoPanel(universidade));
         abas.addTab("Disciplinas", new DisciplinaPanel(universidade));
         abas.addTab("Turmas", new TurmaPanel(universidade));
@@ -132,6 +134,16 @@ public class TelaPrincipal extends JFrame {
         System.exit(0);
     }
 
+    /** Painel provisório até a tela real da aba existir (task #34). */
+    private JPanel criarPainelProvisorio(String nome) {
+        JPanel painel = Estilo.painelTela();
+        painel.add(Estilo.titulo(nome), BorderLayout.NORTH);
+        JLabel aviso = new JLabel("Tela de " + nome + " em construção.", SwingConstants.CENTER);
+        aviso.setFont(Estilo.FONTE_PADRAO);
+        painel.add(aviso, BorderLayout.CENTER);
+        return painel;
+    }
+
     // ---------- Navegação ----------
 
     private void atualizarAbaAtual() {
@@ -155,7 +167,7 @@ public class TelaPrincipal extends JFrame {
         JMenuBar barra = new JMenuBar();
         barra.add(criarMenuArquivo());
         barra.add(criarMenuModulos("Cadastros", KeyEvent.VK_C,
-                "Alunos", "Professores", "Cursos", "Disciplinas", "Turmas"));
+                "Alunos", "Professores", "Departamentos", "Cursos", "Disciplinas", "Turmas"));
         barra.add(criarMenuModulos("Acadêmico", KeyEvent.VK_D, "Matrículas", "Notas"));
         barra.add(criarMenuAjuda());
         return barra;

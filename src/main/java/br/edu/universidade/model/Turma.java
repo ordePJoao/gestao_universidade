@@ -1,5 +1,8 @@
 package br.edu.universidade.model;
 
+import br.edu.universidade.exception.MatriculaDuplicadaException;
+import br.edu.universidade.exception.TurmaCheiaException;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -124,6 +127,35 @@ public class Turma implements Serializable, Exibivel {
      */
     public boolean temVaga() {
         return getVagasOcupadas() < vagas;
+    }
+
+    /**
+     * Realiza a matrícula de um aluno na turma (conforme diagrama UML do projeto),
+     * validando disponibilidade de vagas e duplicidade.
+     *
+     * @param aluno aluno a ser matriculado
+     * @return a instância de {@link Matricula} criada e vinculada
+     * @throws TurmaCheiaException caso a turma já tenha atingido o limite de vagas
+     * @throws MatriculaDuplicadaException caso o aluno já esteja matriculado nesta turma
+     */
+    public Matricula matricular(Aluno aluno) throws TurmaCheiaException, MatriculaDuplicadaException {
+        if (aluno == null) {
+            throw new IllegalArgumentException("Aluno não pode ser nulo.");
+        }
+        if (!temVaga()) {
+            throw new TurmaCheiaException(codigo, vagas);
+        }
+        for (Matricula m : matriculas) {
+            if (m.getAluno().equals(aluno)) {
+                throw new MatriculaDuplicadaException(aluno.getNome() + " (" + aluno.getMatricula() + ")", codigo);
+            }
+        }
+        Matricula nova = new Matricula(aluno, this);
+        matriculas.add(nova);
+        if (!aluno.getMatriculas().contains(nova)) {
+            aluno.getMatriculas().add(nova);
+        }
+        return nova;
     }
 
     /**

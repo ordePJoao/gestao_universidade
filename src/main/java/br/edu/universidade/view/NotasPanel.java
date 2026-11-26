@@ -1,5 +1,6 @@
 package br.edu.universidade.view;
 
+import br.edu.universidade.exception.NotaInvalidaException;
 import br.edu.universidade.model.Aluno;
 import br.edu.universidade.model.Avaliacao;
 import br.edu.universidade.model.Matricula;
@@ -164,6 +165,9 @@ public class NotasPanel extends JPanel implements Atualizavel {
         }
         try {
             matricula.adicionarAvaliacao(tipo, nota());
+        } catch (NotaInvalidaException ex) {
+            Componentes.mostrarErro(this, ex);
+            return;
         } catch (Exception ex) {
             Componentes.mostrarErro(this, ex);
             return;
@@ -179,6 +183,9 @@ public class NotasPanel extends JPanel implements Atualizavel {
         }
         try {
             avaliacao.alterarNota(nota());
+        } catch (NotaInvalidaException ex) {
+            Componentes.mostrarErro(this, ex);
+            return;
         } catch (Exception ex) {
             Componentes.mostrarErro(this, ex);
             return;
