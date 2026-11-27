@@ -116,3 +116,50 @@ Para validar o fluxo de matrícula e cálculo de média antes do merge oficial d
 | **PR62-CT05** | Sincronização de cancelamento em `Aluno` | `Aluno`, `Matricula`, `Turma`, `StatusMatricula` | Associar matrícula ao aluno e chamar `aluno.cancelarMatricula(m)` e `aluno.cancelarMatricula(null)` | Marca matrícula como `CANCELADA`, remove da lista do aluno e ignora `null` sem exceção | Ativo (Passou) |
 | **PR62-CT06** | Proteção de status `CANCELADA` | `Matricula`, `StatusMatricula` | Aprovar matrícula (`10.0`), cancelar via `cancelar()`, chamar `consolidarSituacao()` e tentar lançar nova nota (`8.0`) | Preserva `CANCELADA` sem sobrescrever e lança `IllegalStateException` ao tentar adicionar avaliação | Ativo (Passou) |
 | **PR62-CT07** | Validação de notas e contrato `Exibivel` | `Matricula`, `NotaInvalidaException`, `Exibivel`, `Aluno`, `Curso`, `Disciplina`, `Turma` | Tentar notas `10.5` e `-0.5` e invocar `exibirDados()` polimorficamente nas entidades | Lança `NotaInvalidaException` mantendo `ATIVA` e retorna descrição formatada não vazia em todas as classes | Ativo (Passou) |
+
+---
+
+## 10. Suíte `TestPR65` — Validação da Task #19.2 / Issue #33 (`src/test/java/br/edu/universidade/TestPR65.java`)
+* **Resultado da Execução:** `Tests run: 6, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR65-CT01** | Estrutura visual e campo matrícula somente leitura | `AlunoPanel`, `Atualizavel`, `BuscaAlunoPanel`, `Curso` | Instanciar `AlunoPanel(uni)` e inspecionar componentes, contrato `Atualizavel`, combo de cursos e botões | Implementa `Atualizavel`, integra `BuscaAlunoPanel`, mantém `txtMatricula` não editável (`"(gerada ao salvar)"`) e exibe botões `Salvar`, `Limpar` e `Excluir` | Ativo (Passou) |
+| **PR65-CT02** | Cadastro com curso e geração automática de matrícula | `AlunoPanel`, `Universidade`, `Aluno`, `Curso` | Preencher dados válidos, selecionar curso `BCC` e invocar `salvar()` | Cadastra o aluno na `Universidade`, gera matrícula contendo `"BCC"` e atualiza a tabela | Ativo (Passou) |
+| **PR65-CT03** | Rejeição de dados inválidos (e-mail e data) | `AlunoPanel`, `Universidade` | Tentar salvar com e-mail sem `@` (`"carlos.ufu.br"`) e data inexistente (`"31/02/2026"`) | Exibe aviso e impede o cadastro na `Universidade` *(nota: validação de formato de CPF ainda pendente em `Pessoa`)* | Ativo (Passou) |
+| **PR65-CT04** | Bloqueio de CPF duplicado e campos obrigatórios | `AlunoPanel`, `Universidade`, `Aluno` | Tentar cadastrar aluno com CPF já existente (com máscara) e com campo `Nome` vazio | Bloqueia duplicidade e impede gravação de campos obrigatórios vazios | Ativo (Passou) |
+| **PR65-CT05** | Edição de aluno selecionado na tabela | `AlunoPanel`, `Universidade`, `Aluno`, `Curso` | Selecionar linha na `tblAlunos`, alterar nome e curso para `BSI` e invocar `salvar()` | Atualiza o registro existente e a tabela sem duplicar o aluno | Ativo (Passou) |
+| **PR65-CT06** | Bloqueio de exclusão com matrícula ativa | `AlunoPanel`, `Universidade`, `Aluno`, `Matricula`, `Turma` | Tentar excluir aluno com matrícula ativa e depois cancelar a matrícula via `cancelarMatricula()` | Impede exclusão enquanto houver matrícula vinculada e libera após o cancelamento | Ativo (Passou) |
+
+---
+
+## 11. Suíte `TestPR66` — Validação da Task #14 (`src/test/java/br/edu/universidade/TestPR66.java`)
+* **Resultado da Execução:** `Tests run: 3, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR66-CT01** | Execução completa do `TesteConsole.main` | `TesteConsole`, `Universidade`, `Aluno`, `Professor`, `Curso`, `Disciplina`, `Turma`, `Matricula`, `RepositorioArquivo` | Executar `TesteConsole.main(new String[]{})` capturando `System.out` | Percorre as 3 etapas (fluxo feliz, exceções e persistência temporária), não registra `[FALHA]` e imprime `TUDO OK` | Ativo (Passou) |
+| **PR66-CT02** | Validação das regras auxiliares de matrícula | `TesteConsole`, `Aluno`, `Turma`, `Matricula`, `MatriculaDuplicadaException`, `TurmaCheiaException` | Invocar `matricular(aluno, turma)` para matrícula válida, repetida e com turma lotada (`1` vaga) | Realiza a primeira matrícula e lança `MatriculaDuplicadaException` e `TurmaCheiaException` nos cenários inválidos | Ativo (Passou) |
+| **PR66-CT03** | Persistência e restauração em arquivo temporário | `TesteConsole`, `RepositorioArquivo`, `Universidade`, `Matricula`, `NotaInvalidaException` | Lançar notas (`8.0`, `6.0`), validar rejeição de nota `11.0`, salvar em arquivo temporário (`Files.createTempFile`) e recarregar | Restaura entidades e média `7.0` sem alterar a pasta oficial `data/` | Ativo (Passou) |
+---
+
+## 12. Suíte `TestPR68` — Validação da Task #19.3 / Issue #34 (`src/test/java/br/edu/universidade/TestPR68.java`)
+* **Resultado da Execução:** `Tests run: 4, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR68-CT01** | Remoção de professor e `toString()` em `Departamento` | `Departamento`, `Professor` | Chamar `toString()`, `removerProfessor()` para professor não vinculado e para professor vinculado | Retorna o nome do departamento em `toString()`, devolve `false` para não vinculado e `true` removendo o professor existente | Ativo (Passou) |
+| **PR68-CT02** | Estrutura visual da aba Departamentos | `DepartamentoPanel`, `Atualizavel`, `Professor` | Instanciar `DepartamentoPanel(uni)` e inspecionar interface `Atualizavel`, combo de professores e botões | Implementa `Atualizavel`, popula `cbProfessor` e exibe os botões `Salvar`, `Limpar`, `Excluir`, `Adicionar professor` e `Remover professor` | Ativo (Passou) |
+| **PR68-CT03** | Cadastro de departamento e bloqueio de duplicidade | `DepartamentoPanel`, `Universidade`, `Departamento` | Tentar salvar nome vazio, cadastrar `"FACOM"` e tentar cadastrar `"facom"` | Rejeita nome vazio, cadastra o departamento na tabela e bloqueia nomes duplicados ignorando maiúsculas/minúsculas | Ativo (Passou) |
+| **PR68-CT04** | Vinculação e desvinculação de professores no departamento | `DepartamentoPanel`, `Departamento`, `Professor` | Selecionar departamento na tabela, vincular professor, tentar vincular novamente e remover da lista | Atualiza contagem na tabela para `1`, bloqueia professor repetido e remove professor zerando a contagem | Ativo (Passou) |
+---
+
+## 13. Suíte `TestPR69` — Validação da Task #22 / #15 / #18 (`src/test/java/br/edu/universidade/TestPR69.java`)
+* **Resultado da Execução:** `Tests run: 4, Failures: 0, Errors: 0` (`BUILD SUCCESS`)
+
+| ID | Caso de Teste | Classes Envolvidas | Entrada / Ação | Resultado Esperado | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **PR69-CT01** | Inicialização da janela principal | `TelaPrincipal`, `Universidade` | Instanciar `TelaPrincipal()` e inspecionar título, dimensão mínima (`1000x650`) e `defaultCloseOperation` | Configura título `"Gestão Universidade - Secretaria"`, `DO_NOTHING_ON_CLOSE` e instância única de `Universidade` | Ativo (Passou) |
+| **PR69-CT02** | Registro das 8 abas oficiais | `TelaPrincipal`, `AlunoPanel`, `ProfessorPanel`, `DepartamentoPanel`, `CursoPanel`, `DisciplinaPanel`, `TurmaPanel`, `MatriculaPanel`, `NotasPanel` | Inspecionar títulos e componentes das abas no `JTabbedPane` | Exibe as 8 abas na ordem esperada, utilizando `DepartamentoPanel` oficial na aba `"Departamentos"` | Ativo (Passou) |
+| **PR69-CT03** | Navegação entre abas e barra de menus | `TelaPrincipal` | Verificar menus (`Arquivo`, `Cadastros`, `Acadêmico`, `Ajuda`) e chamar `abrirAba("Departamentos")`, `abrirAba("Notas")` e aba inválida | Alterna o índice selecionado corretamente e ignora títulos inexistentes sem erro | Ativo (Passou) |
+| **PR69-CT04** | Persistência via `salvar()` | `TelaPrincipal`, `RepositorioArquivo`, `Universidade` | Chamar `tela.salvar()` | Persiste o estado da `Universidade` sem exceções e retorna `true` | Ativo (Passou) |
