@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Relatório Final de POO — Sistema de Gestão Universitária</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 30mm 20mm 20mm 30mm;
+    }
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000000;
+      margin: 0;
+      padding: 0;
+    }
+    /* Capa e Folha de Rosto ABNT */
+    .capa, .folha-rosto {
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 242mm;
+      text-align: center;
+    }
+    .capa-topo p, .folha-rosto-autores p {
+      margin: 2px 0;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-indent: 0;
+      text-align: center;
+    }
+    .autores p {
+      margin: 2px 0;
+      font-weight: normal;
+      text-transform: uppercase;
+      text-indent: 0;
+      text-align: center;
+      font-size: 11.5pt;
+      line-height: 1.35;
+    }
+    .capa-titulo h1, .folha-titulo h1 {
+      font-size: 12pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 0 0 4px 0;
+    }
+    .capa-titulo p, .folha-titulo p {
+      font-size: 12pt;
+      margin: 0;
+      text-indent: 0;
+      text-align: center;
+    }
+    .natureza {
+      width: 8cm;
+      margin-left: auto;
+      text-align: justify;
+      font-size: 10.5pt;
+      line-height: 1.15;
+    }
+    .natureza p {
+      text-indent: 0;
+      margin: 0 0 8px 0;
+    }
+    .capa-rodape p {
+      margin: 2px 0;
+      font-weight: normal;
+      text-transform: uppercase;
+      text-indent: 0;
+      text-align: center;
+    }
+    /* Sumário */
+    .sumario {
+      page-break-after: always;
+    }
+    .sumario h2 {
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 12pt;
+      margin-bottom: 18px;
+    }
+    .sumario ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sumario li {
+      margin: 6px 0;
+      font-size: 12pt;
+    }
+    .sumario li.sub {
+      padding-left: 20px;
+    }
+    /* Corpo ABNT */
+    h2.secao {
+      font-size: 12pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 22px 0 10px 0;
+      page-break-after: avoid;
+    }
+    h3.subsecao {
+      font-size: 12pt;
+      font-weight: bold;
+      margin: 16px 0 8px 0;
+      page-break-after: avoid;
+    }
+    p {
+      text-align: justify;
+      text-indent: 1.25cm;
+      margin: 0 0 8px 0;
+    }
+    p.sem-recuo {
+      text-indent: 0;
+    }
+    ul.lista {
+      margin: 6px 0 10px 1.25cm;
+      padding-left: 16px;
+    }
+    ul.lista li {
+      text-align: justify;
+      margin-bottom: 4px;
+    }
+    /* Blocos de Código */
+    .codigo-box {
+      margin: 10px 0 14px 0;
+      page-break-inside: avoid;
+    }
+    .codigo-titulo {
+      font-size: 10pt;
+      font-weight: bold;
+      margin-bottom: 4px;
+      text-indent: 0;
+    }
+    pre {
+      background: #f5f5f5;
+      border: 1px solid #cccccc;
+      padding: 8px 10px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 9pt;
+      line-height: 1.25;
+      white-space: pre-wrap;
+      margin: 0;
+    }
+    /* Figuras ABNT */
+    .figura {
+      text-align: center;
+      margin: 12px 0 16px 0;
+      page-break-inside: avoid;
+    }
+    .figura .legenda {
+      font-size: 10pt;
+      font-weight: bold;
+      margin-bottom: 6px;
+      text-align: center;
+      text-indent: 0;
+    }
+    .figura img {
+      max-width: 96%;
+      max-height: 120mm;
+      border: 1px solid #999999;
+    }
+    .figura .fonte {
+      font-size: 9.5pt;
+      margin-top: 4px;
+      text-align: center;
+      text-indent: 0;
+    }
+    /* Tabela ABNT */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px 0;
+      font-size: 10.5pt;
+      line-height: 1.3;
+      page-break-inside: avoid;
+    }
+    th, td {
+      border-top: 1px solid #000000;
+      border-bottom: 1px solid #000000;
+      padding: 6px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      font-weight: bold;
+      background: #f2f2f2;
+    }
+    .quebra {
+      page-break-before: always;
+    }
+    .referencias p {
+      text-indent: 0;
+      text-align: left;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA (ABNT NBR 14724) -->
+  <div class="capa">
+    <div>
+      <div class="capa-topo">
+        <p>UNIVERSIDADE FEDERAL DE UBERLÂNDIA (UFU)</p>
+        <p>FACULDADE DE COMPUTAÇÃO (FACOM)</p>
+        <p>CURSO DE GRADUAÇÃO EM SISTEMAS DE INFORMAÇÃO</p>
+      </div>
+      <div class="autores" style="margin-top: 2.2cm;">
+        <p>CARLOS CABRAL DE MENEZES FILHO - 12511BSI248</p>
+        <p>FRED FERREIRA CASTRO - 12511BSI262</p>
+        <p>ISAC ALVES - 12421BSI407</p>
+        <p>JOÃO PEDRO CARDOSO DE OLIVEIRA - 12521BSI228</p>
+        <p>LAURA GRAZIELLE CASTRO NASCIMENTO - 12511BSI247</p>
+        <p>LETHICIA FERREIRA DE ALMEIDA - 12511BSI209</p>
+        <p>LETÍCIA MOURA LEMOS - 12511BSI215</p>
+        <p>LUCIANA FERREIRA DOS SANTOS - 12511BSI235</p>
+        <p>LUIZ EDUARDO ROSA SONODA - 12511BSI272</p>
+      </div>
+    </div>
+
+    <div class="capa-titulo">
+      <h1>SISTEMA DE GESTÃO DE UNIVERSIDADE:</h1>
+      <p>Projeto Final de Programação Orientada a Objetos em Java com Interface Gráfica Swing</p>
+    </div>
+
+    <div class="capa-rodape">
+      <p>UBERLÂNDIA</p>
+      <p>2026</p>
+    </div>
+  </div>
+
+  <!-- FOLHA DE ROSTO (ABNT NBR 14724) -->
+  <div class="folha-rosto">
+    <div class="autores">
+      <p>CARLOS CABRAL DE MENEZES FILHO - 12511BSI248</p>
+      <p>FRED FERREIRA CASTRO - 12511BSI262</p>
+      <p>ISAC ALVES - 12421BSI407</p>
+      <p>JOÃO PEDRO CARDOSO DE OLIVEIRA - 12521BSI228</p>
+      <p>LAURA GRAZIELLE CASTRO NASCIMENTO - 12511BSI247</p>
+      <p>LETHICIA FERREIRA DE ALMEIDA - 12511BSI209</p>
+      <p>LETÍCIA MOURA LEMOS - 12511BSI215</p>
+      <p>LUCIANA FERREIRA DOS SANTOS - 12511BSI235</p>
+      <p>LUIZ EDUARDO ROSA SONODA - 12511BSI272</p>
+    </div>
+
+    <div>
+      <div class="folha-titulo" style="margin-bottom: 1.5cm;">
+        <h1>SISTEMA DE GESTÃO DE UNIVERSIDADE:</h1>
+        <p>Projeto Final de Programação Orientada a Objetos em Java com Interface Gráfica Swing</p>
+      </div>
+      <div class="natureza">
+        <p>
+          Relatório técnico apresentado à disciplina de Programação Orientada a Objetos do curso de
+          Sistemas de Informação da Universidade Federal de Uberlândia, como requisito parcial para
+          aprovação.
+        </p>
+      </div>
+    </div>
+
+    <div class="capa-rodape">
+      <p>UBERLÂNDIA</p>
+      <p>2026</p>
+    </div>
+  </div>
+
+  <!-- SUMÁRIO -->
+  <div class="sumario">
+    <h2>SUMÁRIO</h2>
+    <ul>
+      <li><strong>1 INTRODUÇÃO</strong></li>
+      <li><strong>2 MODELAGEM CONCEITUAL E ARQUITETURA</strong></li>
+      <li><strong>3 APLICAÇÃO DOS CONCEITOS DE POO</strong></li>
+      <li class="sub">3.1 Herança</li>
+      <li class="sub">3.2 Classe Abstrata e Polimorfismo</li>
+      <li class="sub">3.3 Interface</li>
+      <li class="sub">3.4 Composição e Agregação</li>
+      <li class="sub">3.5 Encapsulamento</li>
+      <li class="sub">3.6 Tratamento de Exceções Customizadas</li>
+      <li><strong>4 USO DE BIBLIOTECAS</strong></li>
+      <li><strong>5 MANUAL DO USUÁRIO</strong></li>
+      <li class="sub">5.1 Aba Alunos</li>
+      <li class="sub">5.2 Aba Professores</li>
+      <li class="sub">5.3 Aba Departamentos</li>
+      <li class="sub">5.4 Aba Cursos</li>
+      <li class="sub">5.5 Aba Disciplinas</li>
+      <li class="sub">5.6 Aba Turmas</li>
+      <li class="sub">5.7 Aba Matrículas</li>
+      <li class="sub">5.8 Aba Notas</li>
+      <li class="sub">5.9 Persistência Automática e Link do Repositório</li>
+      <li><strong>6 CONCLUSÃO</strong></li>
+      <li><strong>REFERÊNCIAS</strong></li>
+    </ul>
+  </div>
+
+  <!-- 1 INTRODUÇÃO -->
+  <h2 class="secao">1 INTRODUÇÃO</h2>
+  <p>
+    O gerenciamento acadêmico de uma instituição de ensino superior envolve o controle integrado
+    de alunos, professores, departamentos, cursos, disciplinas, turmas, matrículas e avaliações.
+    Quando essas informações são mantidas de forma isolada ou manual, aumentam os riscos de
+    inconsistências, como matrícula duplicada em uma mesma turma, ultrapassagem do limite de
+    vagas ou erros no cálculo de médias finais.
+  </p>
+  <p>
+    Diante desse cenário, este trabalho apresenta o desenvolvimento do <strong>Sistema de Gestão
+    Universitária</strong>, construído integralmente em linguagem Java com interface gráfica em
+    <code>javax.swing</code> e persistência de dados em arquivo binário. O sistema modela o domínio
+    acadêmico aplicando rigorosamente os pilares da Programação Orientada a Objetos (POO),
+    assegurando modularidade, reutilização de código, validação de regras de negócio e
+    interatividade para o usuário final (Secretaria Acadêmica).
+  </p>
+
+  <!-- 2 MODELAGEM CONCEITUAL -->
+  <h2 class="secao">2 MODELAGEM CONCEITUAL E ARQUITETURA</h2>
+  <p>
+    A arquitetura do sistema foi organizada em pacotes que separam responsabilidades de domínio,
+    persistência, exceções e interface gráfica: <code>br.edu.universidade.model</code> (entidades),
+    <code>br.edu.universidade.persistence</code> (leitura e gravação em disco),
+    <code>br.edu.universidade.exception</code> (exceções de negócio) e
+    <code>br.edu.universidade.view</code> (telas Swing).
+  </p>
+  <p>
+    A classe raiz <code>Universidade</code> centraliza as coleções de alunos, professores,
+    departamentos, cursos, disciplinas e turmas, permitindo a persistência em cascata de todo o
+    grafo de objetos. Os diagramas completos de Casos de Uso e de Classes UML encontram-se no
+    repositório oficial em <code>docs/uml/casos_de_uso.pdf</code> e
+    <code>docs/uml/gestao_universidade - DIAGRAMA DE CLASSES.pdf</code>.
+  </p>
+
+  <!-- 3 APLICAÇÃO DOS CONCEITOS DE POO -->
+  <h2 class="secao">3 APLICAÇÃO DOS CONCEITOS DE POO</h2>
+  <p>
+    Todos os conceitos exigidos pela proposta do projeto foram implementados diretamente nas
+    classes do domínio e integrados à interface gráfica. A seguir, são apresentados os trechos
+    reais do código-fonte do projeto.
+  </p>
+
+  <h3 class="subsecao">3.1 Herança</h3>
+  <p>
+    A herança foi aplicada por meio da superclasse abstrata <code>Pessoa</code>, que concentra os
+    atributos comuns (<code>nome</code>, <code>cpf</code> e <code>email</code>) com visibilidade
+    <code>protected</code>. As classes <code>Aluno</code> e <code>Professor</code> estendem
+    <code>Pessoa</code> utilizando <code>extends</code> e reutilizam seu construtor via
+    <code>super(nome, cpf, email)</code>.
+  </p>
+  <div class="codigo-box">
+    <p class="codigo-titulo">Código 1 – Herança em Aluno.java (extensão de Pessoa)</p>
+    <pre>public class Aluno extends Pessoa implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String matricula;
+    private Date dataIngresso;
+    private Curso curso;
+    private List&lt;Matricula&gt; matriculas;
+
+    public Aluno(String nome, String cpf, String email, Date dataIngresso, Curso curso) {
+        super(nome, cpf, email);
+        this.dataIngresso = dataIngresso;
+        this.curso = curso;
+        this.matriculas = new ArrayList&lt;&gt;();
+    }
+}</pre>
+  </div>
+
+  <h3 class="subsecao">3.2 Classe Abstrata e Polimorfismo</h3>
+  <p>
+    A classe <code>Pessoa</code> é declarada como <code>abstract</code> e define o método abstrato
+    <code>getIdent()</code>, obrigando cada subclasse a fornecer sua própria forma de identificação.
+    Em <code>Aluno</code>, <code>getIdent()</code> retorna o código de matrícula; em
+    <code>Professor</code>, retorna o registro SIAPE, caracterizando o polimorfismo por sobrescrita
+    (<code>@Override</code>).
+  </p>
+  <div class="codigo-box">
+    <p class="codigo-titulo">Código 2 – Método abstrato em Pessoa.java e sobrescrita polimórfica em Aluno.java e Professor.java</p>
+    <pre>// Em Pessoa.java
+public abstract String getIdent();
+
+// Em Aluno.java
+@Override
+public String getIdent() {
+    return this.matricula;
+}
+
+// Em Professor.java
+@Override
+public String getIdent() {
+    return this.siape;
+}</pre>
+  </div>
+
+  <h3 class="subsecao">3.3 Interface</h3>
+  <p>
+    Foi criada a interface <code>Exibivel</code> para padronizar a representação textual resumida
+    das entidades do sistema. Ela é implementada por <code>Pessoa</code> (herdada por
+    <code>Aluno</code> e <code>Professor</code>), <code>Curso</code>, <code>Disciplina</code> e
+    <code>Turma</code>, permitindo que objetos distintos sejam tratados uniformemente pelo contrato
+    <code>exibirDados()</code>.
+  </p>
+  <div class="codigo-box">
+    <p class="codigo-titulo">Código 3 – Definição da interface Exibivel.java</p>
+    <pre>public interface Exibivel {
+    String exibirDados();
+}</pre>
+  </div>
+
+  <h3 class="subsecao">3.4 Composição e Agregação</h3>
+  <p>
+    A <strong>agregação</strong> ocorre em <code>Universidade</code>, que mantém coleções de
+    <code>Aluno</code>, <code>Professor</code>, <code>Curso</code>, <code>Disciplina</code>,
+    <code>Turma</code> e <code>Departamento</code>, entidades que podem existir e ser gerenciadas
+    de forma independente. Já a <strong>composição</strong> é aplicada entre <code>Matricula</code> e
+    <code>Avaliacao</code>: cada <code>Matricula</code> instancia e gerencia internamente sua lista
+    de objetos <code>Avaliacao</code> por meio de <code>adicionarAvaliacao(tipo, nota)</code>; caso
+    a matrícula seja removida, suas avaliações deixam de existir.
+  </p>
+  <div class="codigo-box">
+    <p class="codigo-titulo">Código 4 – Composição entre Matricula e Avaliacao em Matricula.java</p>
+    <pre>public class Matricula implements Serializable {
+    private final Aluno aluno;
+    private final Turma turma;
+    private final List&lt;Avaliacao&gt; avaliacoes = new ArrayList&lt;&gt;();
+
+    public void adicionarAvaliacao(String tipo, double nota) throws NotaInvalidaException {
+        avaliacoes.add(new Avaliacao(tipo, nota));
+    }
+
+    public double calcularMedia() {
+        return avaliacoes.stream()
+                .mapToDouble(Avaliacao::getNota)
+                .average()
+                .orElse(0.0);
+    }
+}</pre>
+  </div>
+
+  <h3 class="subsecao">3.5 Encapsulamento</h3>
+  <p>
+    Todas as entidades protegem seus atributos com modificadores <code>private</code> ou
+    <code>protected</code>, expondo acesso controlado via métodos <em>getters</em> e <em>setters</em>
+    com validações de integridade. Em <code>Turma</code>, por exemplo, <code>setVagas(int vagas)</code>
+    impede que o número de vagas seja menor ou igual a zero ou inferior ao total de alunos já
+    matriculados.
+  </p>
+
+  <h3 class="subsecao">3.6 Tratamento de Exceções Customizadas</h3>
+  <p>
+    Para garantir robustez e impedir estados inválidos, o pacote
+    <code>br.edu.universidade.exception</code> define a hierarquia baseada em
+    <code>UniversidadeException</code>, contendo: <code>TurmaCheiaException</code>,
+    <code>MatriculaDuplicadaException</code>, <code>NotaInvalidaException</code>,
+    <code>CpfInvalidoException</code> e <code>AlunoNaoEncontradoException</code>. Na camada visual, a
+    classe utilitária <code>Componentes</code> captura essas exceções e apresenta mensagens
+    amigáveis em caixas de diálogo <code>JOptionPane</code>.
+  </p>
+  <div class="codigo-box">
+    <p class="codigo-titulo">Código 5 – Exceção customizada NotaInvalidaException.java e tratamento na interface</p>
+    <pre>// NotaInvalidaException.java
+public class NotaInvalidaException extends UniversidadeException {
+    private static final long serialVersionUID = 1L;
+    private final double notaInformada;
+
+    public NotaInvalidaException(double notaInformada) {
+        super("Nota inválida: " + notaInformada + ". A nota deve estar entre 0 e 10.");
+        this.notaInformada = notaInformada;
+    }
+}
+
+// Componentes.java (camada view)
+public static void mostrarErro(Component pai, Exception ex) {
+    String titulo = ex instanceof UniversidadeException || ex instanceof IllegalArgumentException
+            ? "Dados inválidos" : "Erro";
+    JOptionPane.showMessageDialog(pai, ex.getMessage(), titulo, JOptionPane.ERROR_MESSAGE);
+}</pre>
+  </div>
+
+  <!-- 4 USO DE BIBLIOTECAS -->
+  <h2 class="secao">4 USO DE BIBLIOTECAS</h2>
+  <p>
+    O projeto foi desenvolvido integralmente com bibliotecas padrão da plataforma Java (JDK) e
+    ferramentas de automação do ecossistema Maven, conforme detalhado na Tabela 1.
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 28%;">Biblioteca / Pacote</th>
+        <th style="width: 72%;">Finalidade no Sistema</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>javax.swing</code></td>
+        <td>Construção completa da interface gráfica desktop: janelas (<code>JFrame</code>), abas (<code>JTabbedPane</code>), formulários (<code>JTextField</code>, <code>JComboBox</code>, <code>JSpinner</code>), tabelas (<code>JTable</code>), menus e diálogos (<code>JOptionPane</code>).</td>
+      </tr>
+      <tr>
+        <td><code>java.awt</code></td>
+        <td>Gerenciadores de layout (<code>BorderLayout</code>, <code>GridBagLayout</code>, <code>FlowLayout</code>), paleta de cores, fontes e tratamento de eventos de botões e fechamento de janela.</td>
+      </tr>
+      <tr>
+        <td><code>java.io</code></td>
+        <td>Persistência binária em disco do grafo completo de objetos a partir da raiz <code>Universidade</code>, usando <code>Serializable</code>, <code>ObjectOutputStream</code> e <code>ObjectInputStream</code> em <code>data/universidade.dat</code>.</td>
+      </tr>
+      <tr>
+        <td><code>java.util</code> e <code>java.time</code></td>
+        <td>Estruturas de coleção (<code>List</code>, <code>ArrayList</code>, <code>Collections</code>, <code>Optional</code>) e manipulação de datas/horários de matrícula e salvamento (<code>LocalDate</code>, <code>LocalTime</code>, <code>Year</code>).</td>
+      </tr>
+      <tr>
+        <td><code>java.text.Normalizer</code></td>
+        <td>Normalização de texto (remoção de acentos) para permitir a busca flexível de alunos por nome, CPF ou matrícula em <code>Universidade.buscarAluno()</code>.</td>
+      </tr>
+      <tr>
+        <td>Maven e JUnit 5</td>
+        <td>Gerenciamento de build/empacotamento (<code>pom.xml</code>) e execução de testes unitários automatizados do domínio e da persistência.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- 5 MANUAL DO USUÁRIO -->
+  <h2 class="secao quebra">5 MANUAL DO USUÁRIO</h2>
+  <p>
+    Para executar o sistema, basta ter o JDK 17 ou superior instalado, compilar com
+    <code>mvn clean package</code> e iniciar o aplicativo com
+    <code>java -jar target/gestao-universidade-1.0.jar</code> (ou executar a classe
+    <code>Main.java</code> pela IDE). A janela principal organiza todas as operações em oito abas
+    na barra superior e exibe na barra inferior o botão de salvamento e o horário do último
+    registro salvo.
+  </p>
+
+  <h3 class="subsecao">5.1 Aba Alunos</h3>
+  <p>
+    Permite cadastrar, editar, excluir e listar alunos, informando nome, CPF, e-mail, data de
+    ingresso e curso. O código de matrícula pode ser gerado automaticamente pela
+    <code>Universidade</code> no momento do cadastro.
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 1 – Tela de cadastro e listagem de Alunos</p>
+    <img src="../screenshots/manual/aba_alunos.png" alt="Aba Alunos" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.2 Aba Professores</h3>
+  <p>
+    Destinada ao gerenciamento do corpo docente, permitindo cadastrar, alterar e excluir
+    professores com nome, CPF, e-mail, registro SIAPE e titulação acadêmica.
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 2 – Tela de cadastro e listagem de Professores</p>
+    <img src="../screenshots/manual/aba_professores.png" alt="Aba Professores" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.3 Aba Departamentos</h3>
+  <p>
+    Permite o cadastro dos departamentos acadêmicos da instituição e o vínculo de professores
+    a cada unidade organizacional.
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 3 – Tela de gerenciamento de Departamentos</p>
+    <img src="../screenshots/manual/aba_departamentos.png" alt="Aba Departamentos" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.4 Aba Cursos</h3>
+  <p>
+    Possibilita criar e manter os cursos da universidade (código, nome e carga horária total),
+    bem como visualizar as disciplinas vinculadas a cada grade.
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 4 – Tela de cadastro e listagem de Cursos</p>
+    <img src="../screenshots/manual/aba_cursos.png" alt="Aba Cursos" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.5 Aba Disciplinas</h3>
+  <p>
+    Gerencia o catálogo de disciplinas ofertadas (código, nome e carga horária), que serão
+    posteriormente associadas aos cursos e às turmas semestrais.
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 5 – Tela de cadastro e listagem de Disciplinas</p>
+    <img src="../screenshots/manual/aba_disciplinas.png" alt="Aba Disciplinas" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.6 Aba Turmas</h3>
+  <p>
+    Permite abrir turmas vinculando uma disciplina, um professor responsável, o semestre letivo e
+    a quantidade máxima de vagas, exibindo em tempo real as vagas ocupadas e disponíveis.
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 6 – Tela de abertura e controle de Turmas</p>
+    <img src="../screenshots/manual/aba_turmas.png" alt="Aba Turmas" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.7 Aba Matrículas</h3>
+  <p>
+    O operador utiliza o painel de busca (por matrícula, CPF ou nome) para localizar e conferir os
+    dados do aluno, seleciona uma turma com vagas disponíveis e clica em <strong>Matricular</strong>.
+    Também é possível selecionar uma linha da tabela e clicar em <strong>Cancelar matrícula</strong>,
+    liberando a vaga automaticamente. Tentativas de matrícula duplicada ou em turma lotada exibem
+    avisos claros na tela.
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 7 – Aba Matrículas com busca de aluno e controle de vagas</p>
+    <img src="../screenshots/manual/aba_matriculas.png" alt="Aba Matrículas" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.8 Aba Notas</h3>
+  <p>
+    Após buscar e confirmar o aluno no painel superior, o seletor exibe exclusivamente as turmas em
+    que ele está matriculado. O usuário informa o tipo de avaliação e a nota (de 0 a 10) para
+    lançar ou alterar notas. A tela calcula automaticamente a média simples e exibe a situação
+    (<strong>APROVADA</strong> em verde para média maior ou igual a 7,0; <strong>REPROVADA</strong>
+    em vermelho para média inferior a 7,0).
+  </p>
+  <div class="figura">
+    <p class="legenda">Figura 8 – Aba Notas com busca de aluno, cálculo de média e situação</p>
+    <img src="../screenshots/manual/aba_notas.png" alt="Aba Notas" />
+    <p class="fonte">Fonte: Elaborado pelos autores (2026).</p>
+  </div>
+
+  <h3 class="subsecao">5.9 Persistência Automática e Link do Repositório</h3>
+  <p>
+    Ao iniciar, o sistema carrega automaticamente o arquivo <code>data/universidade.dat</code> (ou
+    inicia uma universidade vazia na primeira execução). Durante o uso, é possível salvar pelo menu
+    <em>Arquivo → Salvar</em> (<code>Ctrl+S</code>) ou pelo botão da barra inferior; ao fechar a
+    janela, o sistema solicita confirmação para gravar as alterações.
+  </p>
+  <p class="sem-recuo">
+    <strong>Repositório completo no GitHub:</strong>
+    https://github.com/ordePJoao/gestao_universidade
+  </p>
+
+  <!-- 6 CONCLUSÃO -->
+  <h2 class="secao">6 CONCLUSÃO</h2>
+  <p>
+    O desenvolvimento do Sistema de Gestão Universitária permitiu consolidar na prática os
+    fundamentos da Programação Orientada a Objetos em Java. A modelagem baseada em herança
+    (<code>Pessoa</code>, <code>Aluno</code> e <code>Professor</code>), interfaces
+    (<code>Exibivel</code>), composição (<code>Matricula</code> e <code>Avaliacao</code>),
+    exceções customizadas e encapsulamento resultou em uma base de código coesa, extensível e
+    alinhada aos diagramas UML planejados.
+  </p>
+  <p>
+    A integração entre o núcleo de domínio, a persistência binária nativa e a interface gráfica
+    em <code>javax.swing</code> entregou uma aplicação desktop funcional, com tratamento amigável
+    de erros e fluxo intuitivo de matrícula e lançamento de notas. Como trabalhos futuros, o
+    sistema pode evoluir para utilização de banco de dados relacional via JDBC e controle de acesso
+    por perfis distintos de usuário (secretaria, professores e alunos).
+  </p>
+
+  <!-- REFERÊNCIAS -->
+  <h2 class="secao">REFERÊNCIAS</h2>
+  <div class="referencias">
+    <p>
+      ASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. <strong>ABNT NBR 14724</strong>: Informação e
+      documentação – Trabalhos acadêmicos – Apresentação. Rio de Janeiro: ABNT, 2011.
+    </p>
+    <p>
+      DEITEL, Paul; DEITEL, Harvey. <strong>Java</strong>: como programar. 10. ed. São Paulo:
+      Pearson Education do Brasil, 2016.
+    </p>
+    <p>
+      ORACLE CORPORATION. <strong>Java Platform, Standard Edition Documentation</strong>: Packages
+      javax.swing, java.awt and java.io. Disponível em: https://docs.oracle.com/en/java/. Acesso
+      em: 25 nov. 2026.
+    </p>
+    <p>
+      SIERRA, Kathy; BATES, Bert. <strong>Use a Cabeça! Java</strong>. 2. ed. Rio de Janeiro:
+      Alta Books, 2007.
+    </p>
+  </div>
+
+</body>
+</html>
